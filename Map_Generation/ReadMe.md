@@ -77,3 +77,14 @@ The Verbosity class controls the level of information printed during execution:
 
 Level 0: Minimal output.
 Level 1+: More detailed logs (e.g., data summaries, step-by-step processing).
+
+**Sphinx Documentation**
+
+The folder contains two rst files that allow the generation of document folders containing htmls throught the command in prompt:
+
+make html
+make clean (to delete)
+
+The documents are "code_documentation.rst" and index.rst".
+
+Sphinx should be installed in the corresponding folder.
