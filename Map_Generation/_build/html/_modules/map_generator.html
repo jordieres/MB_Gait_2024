@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>map_generator &mdash; TFM_Sclerosis  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TFM_Sclerosis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_documentation.html">Code Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TFM_Sclerosis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">map_generator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for map_generator</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Sep 30 20:06:07 2024</span>
+
+<span class="sd">@author: marbo</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">folium</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
+
+<div class="viewcode-block" id="MapGenerator">
+<a class="viewcode-back" href="../code_documentation.html#map_generator.MapGenerator">[docs]</a>
+<span class="k">class</span> <span class="nc">MapGenerator</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">movements_df</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span> <span class="o">=</span> <span class="n">movements_df</span>
+
+<div class="viewcode-block" id="MapGenerator.generate_folium_map">
+<a class="viewcode-back" href="../code_documentation.html#map_generator.MapGenerator.generate_folium_map">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_folium_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;map_v1.html&quot;</span><span class="p">):</span>
+        <span class="n">pos_init</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="n">pos_init</span><span class="p">,</span> <span class="n">zoom_start</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">)):</span>
+            <span class="n">point1</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">folium</span><span class="o">.</span><span class="n">Marker</span><span class="p">(</span><span class="n">point1</span><span class="p">,</span> <span class="n">tooltip</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Point: </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> | Time: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">point0</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">folium</span><span class="o">.</span><span class="n">PolyLine</span><span class="p">([</span><span class="n">point0</span><span class="p">,</span> <span class="n">point1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="n">m</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="MapGenerator.generate_plotly_map">
+<a class="viewcode-back" href="../code_documentation.html#map_generator.MapGenerator.generate_plotly_map">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_plotly_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qtok</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">):</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+    
+        <span class="c1"># Define a color map for different movement_ids</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="s1">&#39;magenta&#39;</span><span class="p">,</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="s1">&#39;brown&#39;</span><span class="p">,</span> <span class="s1">&#39;pink&#39;</span><span class="p">,</span> <span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;lightblue&#39;</span><span class="p">,</span> <span class="s1">&#39;lightgreen&#39;</span><span class="p">,</span> <span class="s1">&#39;darkred&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;lightcoral&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;darkblue&#39;</span><span class="p">,</span> <span class="s1">&#39;darkgreen&#39;</span><span class="p">,</span> <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="s1">&#39;teal&#39;</span><span class="p">,</span> <span class="s1">&#39;navy&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;indigo&#39;</span><span class="p">,</span> <span class="s1">&#39;violet&#39;</span><span class="p">,</span> <span class="s1">&#39;salmon&#39;</span><span class="p">,</span> <span class="s1">&#39;khaki&#39;</span><span class="p">,</span> <span class="s1">&#39;lavender&#39;</span><span class="p">,</span> <span class="s1">&#39;chocolate&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;darkorange&#39;</span><span class="p">,</span> <span class="s1">&#39;crimson&#39;</span><span class="p">,</span> <span class="s1">&#39;mediumvioletred&#39;</span><span class="p">,</span> <span class="s1">&#39;mediumseagreen&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;steelblue&#39;</span><span class="p">,</span> <span class="s1">&#39;slategray&#39;</span><span class="p">,</span> <span class="s1">&#39;dimgray&#39;</span><span class="p">,</span> <span class="s1">&#39;tan&#39;</span><span class="p">,</span> <span class="s1">&#39;orchid&#39;</span><span class="p">,</span> <span class="s1">&#39;lightpink&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;mediumslateblue&#39;</span><span class="p">,</span> <span class="s1">&#39;darkslategray&#39;</span><span class="p">,</span> <span class="s1">&#39;sandybrown&#39;</span><span class="p">,</span> <span class="s1">&#39;lightyellow&#39;</span><span class="p">,</span> 
+            <span class="s1">&#39;lightslategray&#39;</span><span class="p">,</span> <span class="s1">&#39;aliceblue&#39;</span><span class="p">,</span> <span class="s1">&#39;powderblue&#39;</span><span class="p">,</span> <span class="s1">&#39;mediumturquoise&#39;</span>
+        <span class="p">]</span>
+        <span class="n">unique_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;movement_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    
+        <span class="k">for</span> <span class="n">movement_id</span> <span class="ow">in</span> <span class="n">unique_ids</span><span class="p">:</span>
+            <span class="c1"># Filter data for the current movement_id</span>
+            <span class="n">group_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;movement_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">movement_id</span><span class="p">]</span>
+            <span class="n">text_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Point </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">time</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])]</span>
+    
+            <span class="c1"># Get relevant data of the movement (first entry in the group)</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+            <span class="n">avg_speed</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;avg_speed_m_s&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">number_of_data_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_df</span><span class="p">)</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;time_diff&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+            
+            
+            
+            
+            
+            <span class="c1"># Adding markers with labels</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scattermapbox</span><span class="p">(</span>
+                <span class="n">lat</span><span class="o">=</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">],</span>
+                <span class="n">lon</span><span class="o">=</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">],</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;markers+text&#39;</span><span class="p">,</span>  <span class="c1"># Ensure markers and text are shown</span>
+                <span class="n">text</span><span class="o">=</span><span class="n">text_labels</span><span class="p">,</span>  <span class="c1"># Adding the labels</span>
+                <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">movement_id</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]),</span>  <span class="c1"># Use color based on movement_id</span>
+                <span class="n">textposition</span><span class="o">=</span><span class="s2">&quot;top right&quot;</span><span class="p">,</span>  <span class="c1"># Adjust position of the text relative to the point</span>
+                <span class="n">hoverinfo</span><span class="o">=</span><span class="s1">&#39;text&#39;</span><span class="p">,</span>  <span class="c1"># Show text on hover</span>
+                <span class="n">name</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Movement ID </span><span class="si">{</span><span class="n">movement_id</span><span class="si">}</span><span class="s1">&lt;br&gt;&#39;</span>  <span class="c1"># Use &lt;br&gt; for line breaks</span>
+                    <span class="sa">f</span><span class="s1">&#39;Start: </span><span class="si">{</span><span class="n">start_time</span><span class="si">}</span><span class="s1">&lt;br&gt;&#39;</span> 
+                    <span class="sa">f</span><span class="s1">&#39;Average speed: </span><span class="si">{</span><span class="n">avg_speed</span><span class="si">}</span><span class="s1"> m/s&lt;br&gt;&#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;Duration: </span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s1"> s&lt;br&gt;&#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;Number of Datapoints: </span><span class="si">{</span><span class="n">number_of_data_points</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">),</span>  <span class="c1"># Name with start time for the trace</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>  <span class="c1"># Use customdata to hold additional info</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="s1">&#39;&lt;b&gt;%</span><span class="si">{customdata}</span><span class="s1">&lt;/b&gt;&#39;</span>  <span class="c1"># Custom hover template</span>
+            <span class="p">))</span>
+    
+            <span class="c1"># Adding lines connecting the points for the same movement_id</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scattermapbox</span><span class="p">(</span>
+                <span class="n">lat</span><span class="o">=</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">],</span>
+                <span class="n">lon</span><span class="o">=</span><span class="n">group_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">],</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">movement_id</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]),</span>  <span class="c1"># Same color as markers</span>
+                <span class="c1">#name=f&#39;Movement ID {movement_id} (Start: {start_time})&#39;  # Ensure the same name for the line</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Movement ID </span><span class="si">{</span><span class="n">movement_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="c1">#showlegend=False</span>
+            <span class="p">))</span>
+        <span class="n">title_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Movements for </span><span class="si">{</span><span class="n">qtok</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="c1"># Update layout with mapbox style and centering</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">title_text</span><span class="p">,</span>
+            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span>  <span class="c1"># Position the title slightly downwards</span>
+            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>   <span class="c1"># Center the title</span>
+            <span class="s1">&#39;xanchor&#39;</span><span class="p">:</span> <span class="s1">&#39;center&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;yanchor&#39;</span><span class="p">:</span> <span class="s1">&#39;top&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="p">},</span>  <span class="c1"># Adjust font size</span>
+            <span class="p">},</span>
+            <span class="n">mapbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">style</span><span class="o">=</span><span class="s2">&quot;carto-positron&quot;</span><span class="p">,</span>  <span class="c1"># Style of the map</span>
+                <span class="n">center</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">lon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
+                <span class="n">zoom</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">height</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span>
+            <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Show legend if you have multiple traces</span>
+            <span class="n">dragmode</span><span class="o">=</span><span class="s1">&#39;zoom&#39;</span>  <span class="c1"># Enables zoom with mouse drag</span>
+        <span class="p">)</span>
+    
+        <span class="c1"># Callback for click events to show labels</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span><span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">selector</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;markers&#39;</span><span class="p">))</span>
+    
+        <span class="c1"># Construct the file name using qtok, start_date, and end_date</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;map_</span><span class="si">{</span><span class="n">qtok</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s2">.html&quot;</span>
+    
+        <span class="c1"># Save the Plotly map to an HTML file</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;scrollZoom&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span></div>
+</div>
+
+
+    
+    
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Marti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
