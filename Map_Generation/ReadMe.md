@@ -12,12 +12,14 @@ The Movement Data Analyzer allows you to:
 4. Control the verbosity of the output to obtain more or less detailed logs of the data processing and visualization.
 
 **Features**
+
 Data Fetching: Retrieve movement data based on date ranges, identifiers (qtok), and other filters.
 Data Processing: Calculate distances, speeds, and other movement metrics using geospatial data.
 Map Visualization: Generate interactive maps with movement paths and detailed tooltips.
 Customizable Verbosity: Optionally view detailed processing steps and logs through command-line verbosity levels.
 
 **Requirements**
+
 The following libraries are required to run the program:
 
 Python 3.x
@@ -36,9 +38,11 @@ From Prompt:
 python main.py -f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right
 
 **Configuration**
+
 The program uses a TOML file for configuration. Ensure the configuration file (config.toml) is properly set up before running the program.
 
 **DataFetcher Class:**
+
 The DataFetcher class retrieves movement data from an external API based on the following parameters:
 
 qtok: The unique identifier for the dataset.
@@ -47,16 +51,19 @@ start_date: The beginning of the analysis period.
 end_date: The end of the analysis period.
 
 **DataProcessor:**
+
 Once the data is fetched, the DataProcessor class processes the raw data:
 
 Haversine Formula: This is used to calculate distances between two points on the Earth’s surface.
 Movement Calculation: The processor identifies unique movements and calculates metrics such as distance, speed, and movement duration.
 
 **Map Generation**
+
 Plotly Map:
 The generate_plotly_map method generates an interactive map with movement lines and hover tooltips showing detailed information like average speed and duration.
 
 **Verbosity**
+
 The Verbosity class controls the level of information printed during execution:
 
 Level 0: Minimal output.
