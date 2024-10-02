@@ -1,0 +1,7 @@
+# config.toml
+[database]
+org = "UPM"
+database = "SSL"
+retention_policy = "autogen"
+tokenv2 = "Zx2jR8PD6h3YlS7HVsY5Han1SzF_iz7uk8n5z9BYRZ5q50lk8r1L18N-nFZiGCa57oowLgl8656pVpCig-GANg=="
+url = "https://apiivm78.etsii.upm.es:8086"
