@@ -3,6 +3,7 @@
 This project is designed to fetch, process, and visualize movement data based on input parameters such as time range, location, and identifiers. The program fetches data from a specified API, processes it to identify movements, and generates visualizations using Plotly.
 
 **Overview**
+
 The Movement Data Analyzer allows you to:
 
 1. Fetch movement data from an API.
