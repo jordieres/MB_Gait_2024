@@ -12,3 +12,4 @@ from .data_fetcher import DataFetcher
 from .data_processor import DataProcessor
 from .map_generator import MapGenerator
 from .verbosity import Verbosity
+from .outputExtGPS import Output
