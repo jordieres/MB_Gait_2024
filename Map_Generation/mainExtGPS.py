@@ -11,6 +11,7 @@ from data_fetcher import DataFetcher
 from data_processor import DataProcessor
 from map_generator import MapGenerator
 from verbosity import Verbosity
+from outputExtGPS import Output
 
 
 # Custom verbose handler for argparse
@@ -88,7 +89,7 @@ def main():
     2. Data is fetched using the DataFetcher class.
     3. The fetched data is processed using the DataProcessor class.
     4. A map visualizing the movements is generated using MapGenerator.
-    5. Verbosity information is printed using the Verbosity class.
+    5. Output information is printed using the Output class.
     """
     
 
@@ -99,11 +100,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-f", "--from", type=str, required=True, help="Date for starting the analysis. Format YYYY-MM-DD.")
     ap.add_argument("-u", "--until", type=str, required=True, help="Date for ending the analysis. Format YYYY-MM-DD.")
-    ap.add_argument("-v", "--verbose", nargs='?', action=VAction, dest='verbose', help="Option for detailed information.")
+    ap.add_argument("-v", "--verbose", nargs='?', action=VAction, dest='verbose', help="Option for methods verbosity.")
     ap.add_argument("-q", "--qtok", type=str, required=True, help="Enter the qtok value (e.g., 'MGM-202406-79').")
     ap.add_argument("-p", "--pie", type=str, choices=["Right", "Left"], required=True, help="Enter the foot ('Right' or 'Left').")
+    ap.add_argument("-o", "--output", type=int, choices=range(0, 3), default=2, help="Choose a number from 0 to 2 (default is 2)")
     args = vars(ap.parse_args())
-
+    
+    verbosity_level = int(args['verbose']) if args['verbose'] else 0
+    
+    if verbosity_level > 0:
+        print(f"Starting data processing with verbosity level {verbosity_level}")
+        
+    if verbosity_level > 1:
+        print(f"Loaded configuration: {config}\n")
+        
+        
     # Create DataFetcher and fetch the data
     data_fetcher = DataFetcher(
         qtok=args['qtok'],
@@ -112,26 +123,36 @@ def main():
         end_date=f"{args['until']}T23:59:59Z",
         token=config.token,
         org=config.org,
-        url=config.url
+        url=config.url,
+        verbose = verbosity_level
     )
+   
     raw_data = data_fetcher.fetch_data()
-
+    
     # Process the data
-    data_processor = DataProcessor(raw_data)
+    data_processor = DataProcessor(raw_data, verbosity_level)
+    
     movements_df = data_processor.process_data()
     
+    
     # Generate maps
-    map_generator = MapGenerator(movements_df)
+    map_generator = MapGenerator(movements_df, verbosity_level)
+    
     #map_generator.generate_folium_map()
     map_generator.generate_plotly_map(args['qtok'], args['from'], args['until'])
+   
     
     verbosity_level = int(args['verbose'])  # Convert argument to integer
     qtok=args['qtok']
     start_date=args['from']
     end_date = args['until']
-    verbosity = Verbosity(verbosity_level, qtok, start_date, end_date, raw_data, movements_df)  # Initialize the Verbosity class
-    verbosity.print_info()  # Print the verbosity level
-
+    output_level = int(args['output'])
+   
+    output = Output(output_level, qtok, start_date, end_date, raw_data, movements_df)  # Initialize the Verbosity class
+    
+    output.print_info()  # Print the verbosity level
+    if verbosity_level > 0:
+        print("\nProgram execution completed.")
 
 if __name__ == '__main__':
     main()
