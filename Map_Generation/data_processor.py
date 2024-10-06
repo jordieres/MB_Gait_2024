@@ -7,6 +7,8 @@ Created on Mon Sep 30 20:05:03 2024
 
 import pandas as pd
 import numpy as np
+from pytz import timezone
+
 
 class DataProcessor:
     """
@@ -16,7 +18,9 @@ class DataProcessor:
    ----------
    data : pandas.DataFrame
        A DataFrame containing the movement data with columns like latitude, longitude, and time.
-
+    verbose : int
+           The verbosity level (0, 1, or 2).
+           
    Methods:
    -------
    haversine(lat1, lon1, lat2, lon2):
@@ -27,7 +31,8 @@ class DataProcessor:
        speed, and grouping points into movements based on distance and time thresholds.
    """
    
-    def __init__(self, data):
+   
+    def __init__(self, data, verbose=0):
         """
         Initializes the DataProcessor with a DataFrame.
 
@@ -36,9 +41,11 @@ class DataProcessor:
         data : pandas.DataFrame
             A DataFrame containing columns '_time', 'lat', and 'lng' representing timestamps,
             latitude, and longitude, respectively.
+        verbose : int, optional
+            The verbosity level (default is 0, meaning no output).
         """
         self.data = data
-
+        self.verbose = verbose
     @staticmethod
     def haversine(lat1, lon1, lat2, lon2):
         """
@@ -81,14 +88,15 @@ class DataProcessor:
 
        Steps:
        ------
-       1. Converts latitude and longitude to float.
-       2. Identifies unique movements where lat/lng change.
-       3. Sorts movements chronologically.
-       4. Calculates the distance between consecutive points using the Haversine formula.
-       5. Computes the time difference between consecutive points.
-       6. Calculates speed (distance/time).
-       7. Assigns movement IDs based on thresholds for distance and time.
-       8. Computes average speed for each movement.
+       1. Sets UTC time to CEST or EST time according to the time of the year
+       2. Converts latitude and longitude to float.
+       3. Identifies unique movements where lat/lng change.
+       4. Sorts movements chronologically.
+       5. Calculates the distance between consecutive points using the Haversine formula.
+       6. Computes the time difference between consecutive points.
+       7. Calculates speed (distance/time).
+       8. Assigns movement IDs based on thresholds for distance and time.
+       9. Computes average speed for each movement.
 
        Returns:
        -------
@@ -96,9 +104,19 @@ class DataProcessor:
            A DataFrame containing processed data with added columns for distance, time difference,
            speed, and movement ID, as well as the average speed for each movement.
        """
+        if self.verbose > 0:
+            print("\nStarting data processing...")
+       
+        self.data['_time_EST'] = self.data['_time'].dt.tz_convert('Europe/Madrid')
+        if self.verbose > 1:
+            print("Converted UTC time to Europe/Madrid time zone.")
+          
         self.data[['lat', 'lng']] = self.data[['lat', 'lng']].astype(float)
+        if self.verbose > 1:
+            print("Converted lat/lng columns to float.")  
+            
         list_movements = [{
-            'time': self.data['_time'].iloc[0],
+            'time': self.data['_time_EST'].iloc[0],
             'lat': self.data['lat'].iloc[0],
             'lng': self.data['lng'].iloc[0]
         }]
@@ -107,34 +125,44 @@ class DataProcessor:
         for i in range(len(self.data) - 1):
             if self.data['lat'].iloc[i] != self.data['lat'].iloc[i + 1] or self.data['lng'].iloc[i] != self.data['lng'].iloc[i + 1]:
                 list_movements.append({
-                    'time': self.data['_time'].iloc[i + 1],
+                    'time': self.data['_time_EST'].iloc[i + 1],
                     'lat': self.data['lat'].iloc[i + 1],
                     'lng': self.data['lng'].iloc[i + 1]
                 })
                 
         movements_df = pd.DataFrame(list_movements)
         movements_df = movements_df.sort_values(by='time', ascending=True).reset_index(drop=True)
-        
+        if self.verbose > 1:
+            print(f"Identified and sorted {len(movements_df)} unique movements in space.")
+            
         # Calculate distances
         distances = []
         for i in range(1, len(movements_df)):
             dist = self.haversine(movements_df['lat'].iloc[i - 1], movements_df['lng'].iloc[i - 1],
                                   movements_df['lat'].iloc[i], movements_df['lng'].iloc[i])
             distances.append(dist)
+       
+        if self.verbose > 1:
+            print("Calculated distances between consecutive points.")
         
         movements_df['distance_m'] = [0] + distances  # First distance is 0 since there's no previous point
         movements_df['time_diff'] = movements_df['time'].diff().dt.total_seconds()
         movements_df['speed_m_s'] =  movements_df['distance_m'] /  movements_df['time_diff']
         movements_df.fillna(0, inplace=True)
-        
+        if self.verbose > 1:
+            print("Calculated time differences and speeds.")
+            
         movement_id = 0
         movement_list = []
+        time_spacing = 120 #Used to be 60, adjust if needed.
         for i in range(len(movements_df)):
-            if movements_df['distance_m'][i] > 60 or movements_df['time_diff'][i] > 60:
+            if movements_df['distance_m'][i] > time_spacing or movements_df['time_diff'][i] > time_spacing: 
                 movement_id += 1
             movement_list.append(movement_id)
         movements_df['movement_id'] = movement_list
-        
+        if self.verbose > 0:
+            print(f"Assigned movement IDs according to time between steps (set to {time_spacing}).")
+            
         average_speeds_dict = {}
         for i in movements_df['movement_id'].unique():
             
@@ -153,6 +181,12 @@ class DataProcessor:
             average_speeds_list.append(average_speeds_dict[movements_df['movement_id'][i]])
           
         movements_df['avg_speed_m_s'] = average_speeds_list
-        
+        if self.verbose > 0:
+            print("Processed all data and calculated average speeds for each movement.")
+            
+        if self.verbose > 1:
+            print("Final processed DataFrame:")
+            print(movements_df.head())
         return movements_df
+
 
