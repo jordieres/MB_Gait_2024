@@ -5,13 +5,13 @@ Created on Tue Oct  1 19:20:58 2024
 @author: marbo
 """
 
-class Verbosity:
+class Output:
     def __init__(self, level, qtok, start, end, raw_data, movements_df):
         """
-        Initialize a Verbosity instance.
+        Initialize an Output instance.
 
         Parameters:
-        level (int): The verbosity level (0 to 3).
+        level (int): The output level (0 to 2).
         qtok (str): Token for the process.
         start (str): Start date for the process.
         end (str): End date for the process.
@@ -20,8 +20,8 @@ class Verbosity:
         Raises:
         ValueError: If level is not between 0 and 3.
         """
-        if level < 0 or level > 3:
-            raise ValueError("Verbosity level must be between 0 and 3.")
+        if level < 0 or level > 2:
+            raise ValueError("Output level must be between 0 and 2.")
         self.level = level
         self.qtok = qtok
         self.start = start
@@ -61,7 +61,9 @@ class Verbosity:
                
                 avg_speed = round(group_df['avg_speed_m_s'].iloc[0], 2)
                 number_of_data_points = len(group_df)
-                duration = round(group_df['time_diff'][1:].sum(), 1)               
+                duration = round(group_df['time_diff'][1:].sum(), 1)   
+                hours, remainder = divmod(duration, 3600)  
+                minutes, seconds = divmod(remainder, 60)  
                 distance_travelled = round(group_df['distance_m'][1:].sum(), 2)  
                 movement_start_time = group_df['time'].iloc[0].strftime('%Y-%m-%d %H:%M:%S')
                 movement_end_time = group_df['time'].iloc[number_of_data_points - 1].strftime('%Y-%m-%d %H:%M:%S')
@@ -69,10 +71,8 @@ class Verbosity:
                 print(f'\tNumber of data points: {number_of_data_points}')
                 print(f'\tMovement start time: {movement_start_time}')
                 print(f'\tMovement end time: {movement_end_time}')
-                print(f'\tDuration: {duration} s')
+                print(f'\tDuration:{int(hours)}h {int(minutes)}m {int(seconds)}s')
                 print(f'\tAverage_Speed: {avg_speed} m/s')
                 print(f'\tDistance travelled: {distance_travelled} m')
                 print("")
                 
-        elif self.level == 3:
-            print("Otros objetos importantes")
