@@ -20,13 +20,14 @@ class DataFetcher:
         token (str): InfluxDB token.
         org (str): InfluxDB organization name.
         url (str): InfluxDB URL.
-    
+        verbose (int): Verbosity level to control output.
+        
     Methods:
         build_query(): Constructs the InfluxDB query.
         fetch_data(): Fetches data from InfluxDB and returns a pandas DataFrame.
     """
     
-    def __init__(self, qtok, pie, start_date, end_date, token, org, url):
+    def __init__(self, qtok, pie, start_date, end_date, token, org, url, verbose=0):
         self.qtok = qtok
         self.pie = pie
         self.start_date = start_date
@@ -35,6 +36,7 @@ class DataFetcher:
         self.org = org
         self.url = url
         self.client = InfluxDBClient(url=self.url, token=self.token, org=self.org)
+        self.verbose = verbose
         
     def build_query(self):
         """
@@ -43,7 +45,7 @@ class DataFetcher:
         Returns:
             str: The constructed query string.
         """
-        return f'''
+        query = f'''
         from(bucket:"Gait/autogen")
         |> range(start: {self.start_date}, stop: {self.end_date})
         |> filter(fn: (r) => r["_measurement"] == "Gait")
@@ -51,13 +53,32 @@ class DataFetcher:
         |> filter(fn: (r) => r["_field"] == "S0")
         |> yield()
         '''
+        if self.verbose > 1:
+            print(f"Constructed Query: {query}")
+        return query
     
     def fetch_data(self):
+        
+        if self.verbose > 0:
+            print(f"\nFetching data for token: {self.qtok}, Foot: {self.pie}, from {self.start_date} to {self.end_date}")
+            
         query = self.build_query()
+        
+        if self.verbose > 1:
+            print("Executing query...")
+            
         result = self.client.query_api().query(org=self.org, query=query)
         res = pd.DataFrame()
+        
+        
         for i in result:
             rs = [row.values for row in i.records]
             res = pd.concat([res, pd.DataFrame(rs)], axis=0)
         res.reset_index(drop=True, inplace=True)
+        
+        if self.verbose > 0:
+            print("Data fetching complete.")
+        
+        if self.verbose > 1:
+            print(f"Fetched data size: {res.shape}")
         return res
