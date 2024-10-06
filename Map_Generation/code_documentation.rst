@@ -31,6 +31,13 @@ Verbosity Module
    :undoc-members:
    :show-inheritance:
 
+Output Module
+-------------------
+
+.. automodule:: outputExtGPS
+   :members:
+   :undoc-members:
+   :show-inheritance:
 MapGenerator Module
 -------------------
 
@@ -39,10 +46,12 @@ MapGenerator Module
    :undoc-members:
    :show-inheritance:
 
-Main Module
+Main Ext GPS Module
 -----------
 
-.. automodule:: main
+.. automodule:: mainExtGPS
    :members:
+   :undoc-members:
+   :show-inheritance:
    :undoc-members:
    :show-inheritance:
