@@ -10,8 +10,8 @@ from config import Config
 from data_fetcher import DataFetcher
 from data_processor import DataProcessor
 from map_generator import MapGenerator
-from verbosity import Verbosity
 from outputExtGPS import Output
+from create_pickle import DataSaver
 
 
 # Custom verbose handler for argparse
@@ -104,6 +104,7 @@ def main():
     ap.add_argument("-q", "--qtok", type=str, required=True, help="Enter the qtok value (e.g., 'MGM-202406-79').")
     ap.add_argument("-p", "--pie", type=str, choices=["Right", "Left"], required=True, help="Enter the foot ('Right' or 'Left').")
     ap.add_argument("-o", "--output", type=int, choices=range(0, 3), default=2, help="Choose a number from 0 to 2 (default is 2)")
+    ap.add_argument("-t", "--time-spacing", type=int, default=120, help="Time spacing in seconds for segmenting movements (default is 120).")
     args = vars(ap.parse_args())
     
     verbosity_level = int(args['verbose']) if args['verbose'] else 0
@@ -129,19 +130,22 @@ def main():
    
     raw_data = data_fetcher.fetch_data()
     
-    # Process the data
+    # Process the data with the provided time_spacing argument
     data_processor = DataProcessor(raw_data, verbosity_level)
     
-    movements_df = data_processor.process_data()
+    movements_df = data_processor.process_data(time_spacing=args['time_spacing'])
     
     
     # Generate maps
     map_generator = MapGenerator(movements_df, verbosity_level)
     
-    #map_generator.generate_folium_map()
     map_generator.generate_plotly_map(args['qtok'], args['from'], args['until'])
    
-    
+    # Save movements_df to a pickle file
+    data_saver = DataSaver(output_dir='output_data', filename=f'movements_{args["qtok"]}.pkl')
+    data_saver.save_to_pickle(movements_df)
+   
+   
     verbosity_level = int(args['verbose'])  # Convert argument to integer
     qtok=args['qtok']
     start_date=args['from']
