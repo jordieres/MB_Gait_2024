@@ -36,10 +36,10 @@ Any additional dependencies can be installed from the requirements.txt if provid
 **Usage:**
 
 From Spyder IDE
-runfile('path/main.py', wdir='C:/Users/marbo/Documents', args='-f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right')
+runfile('path/mainExtGPS.py', wdir='C:/Users/marbo/Documents', args='-f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right')
 
 From Prompt:
-python main.py -f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right
+python mainExtGPS.py -f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right
 
 
 **Configuration**
@@ -71,12 +71,9 @@ Plotly Map:
 The generate_plotly_map method generates an interactive map with movement lines and hover tooltips showing detailed information like average speed and duration.
 
 
-**Verbosity**
+**Main ExtGPS**
 
-The Verbosity class controls the level of information printed during execution:
-
-Level 0: Minimal output.
-Level 1+: More detailed logs (e.g., data summaries, step-by-step processing).
+The main function parses command-line arguments, retrieves data from a configurable API, processes it into a structured format, and generates an interactive movement map using Plotly. The script is versatile, with configurable options for verbosity, date range, output level, and movement segmentation.
 
 **Sphinx Documentation**
 
