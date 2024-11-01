@@ -10,8 +10,7 @@ from config import Config
 from data_fetcher import DataFetcher
 from data_processor import DataProcessor
 from map_generator import MapGenerator
-from outputExtGPS import Output
-from create_pickle import DataSaver
+
 
 
 # Custom verbose handler for argparse
@@ -142,19 +141,11 @@ def main():
     map_generator.generate_plotly_map(args['qtok'], args['from'], args['until'])
    
     # Save movements_df to a pickle file
-    data_saver = DataSaver(output_dir='output_data', filename=f'movements_{args["qtok"]}.pkl')
-    data_saver.save_to_pickle(movements_df)
+    data_fetcher.save_to_pickle(movements_df, output_dir='output_data', filename='movements.pkl')
+
    
    
-    verbosity_level = int(args['verbose'])  # Convert argument to integer
-    qtok=args['qtok']
-    start_date=args['from']
-    end_date = args['until']
-    output_level = int(args['output'])
-   
-    output = Output(output_level, qtok, start_date, end_date, raw_data, movements_df)  # Initialize the Verbosity class
     
-    output.print_info()  # Print the verbosity level
     if verbosity_level > 0:
         print("\nProgram execution completed.")
 
