@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Mon Sep 30 20:05:03 2024
 
@@ -213,15 +212,16 @@ class DataProcessor:
             If the timezone cannot be determined, returns (None, 'Unknown').
         """
         lat, lng, utc_time = row['lat'], row['lng'], row['time']
-
+        
         timezone_str = self.tf.timezone_at(lat=lat, lng=lng)
-
+        
         if timezone_str:
             local_tz = pytz.timezone(timezone_str)
             local_time = utc_time.tz_convert(local_tz)
             return local_time, timezone_str
-
-        return None, 'Unknown'
+        
+        # Return NaT for local_time if timezone can't be found
+        return pd.NaT, 'Unknown'
 
     def identify_movements(self):
         """
@@ -409,4 +409,7 @@ class DataProcessor:
             print(movements_df.head())
 
         return movements_df
+
+
+       
 
