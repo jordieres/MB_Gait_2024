@@ -7,6 +7,9 @@ Created on Mon Sep 30 20:04:33 2024
 
 import pandas as pd
 from influxdb_client import InfluxDBClient
+import pickle
+import os
+
 
 class DataFetcher:
     """
@@ -45,14 +48,16 @@ class DataFetcher:
         Returns:
             str: The constructed query string.
         """
+        
         query = f'''
-        from(bucket:"Gait/autogen")
-        |> range(start: {self.start_date}, stop: {self.end_date})
-        |> filter(fn: (r) => r["_measurement"] == "Gait")
-        |> filter(fn: (r) => r["CodeID"] == "{self.qtok}" and r["type"] == "SCKS" and r["Foot"] == "{self.pie}")
-        |> filter(fn: (r) => r["_field"] == "S0")
-        |> yield()
-        '''
+            from(bucket:"Gait/autogen")
+            |> range(start: {self.start_date}, stop: {self.end_date})
+            |> filter(fn: (r) => r["_measurement"] == "Gait")
+            |> filter(fn: (r) => r["CodeID"] == "{self.qtok}" and r["type"] == "SCKS" and r["Foot"] == "{self.pie}")
+            |> filter(fn: (r) => r["_field"] == "S0")
+            |> yield()
+            '''
+        
         if self.verbose > 1:
             print(f"Constructed Query: {query}")
         return query
@@ -61,7 +66,8 @@ class DataFetcher:
         
         if self.verbose > 0:
             print(f"\nFetching data for token: {self.qtok}, Foot: {self.pie}, from {self.start_date} to {self.end_date}")
-            
+        
+        
         query = self.build_query()
         
         if self.verbose > 1:
@@ -82,3 +88,34 @@ class DataFetcher:
         if self.verbose > 1:
             print(f"Fetched data size: {res.shape}")
         return res
+    
+    def save_to_pickle(self, df, output_dir='data', filename='movements_df.pkl'):
+        """
+        Saves the DataFrame to a pickle file.
+
+        Parameters:
+        ----------
+        df : pd.DataFrame
+            The DataFrame to save.
+        output_dir : str
+            The directory where the file should be saved.
+        filename : str
+            The name of the pickle file.
+        """
+        # Create the output directory if it doesn't exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        filepath = os.path.join(output_dir, filename)
+        try:
+            with open(filepath, 'wb') as f:
+                pickle.dump(df, f)
+            if self.verbose > 0:
+                print(f"DataFrame successfully saved to {filepath}")
+            if self.verbose > 1:
+                print(f"Pickle file saved with {len(df)} records.")
+        except Exception as e:
+            if self.verbose > 0:
+                print(f"Failed to save DataFrame to {filepath}.")
+            if self.verbose > 1:
+                print(f"Error details: {str(e)}")
