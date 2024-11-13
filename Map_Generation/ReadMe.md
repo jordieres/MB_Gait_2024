@@ -81,6 +81,8 @@ make clean
 ### From Spyder IDE
 ```python
 runfile('path/mainExtGPS.py', wdir='C:/Users/marbo/Documents', args='-f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right')
+```
 ### From Command Prompt
 ```python
 mainExtGPS.py -f 2024-06-16 -u 2024-06-17 -v 2 -q MGM-202406-79 -p Right
+```
