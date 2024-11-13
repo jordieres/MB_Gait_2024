@@ -71,11 +71,11 @@ The folder contains two `.rst` files (`code_documentation.rst` and `index.rst`) 
 To generate HTML documentation:
 ```bash
 make html
-
+```
 To clean existing HTML documentation:
 ```bash
 make clean
-
+```
 ## Usage
 
 ### From Spyder IDE
