@@ -7,7 +7,7 @@ Created on Sat Oct 19 17:50:59 2024
 
 import pandas as pd
 import numpy as np
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, butter, filtfilt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.mplot3d import Axes3D
@@ -37,64 +37,91 @@ class GaitAnalysis:
         """
         if self.verbosity > 0:
             print("Starting data preprocessing...")
-
+    
         data_dict = {}
-
+    
         # Separate acceleration data for each foot
         data_dict['acc_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Right')],
-            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Right')],
-            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Right')],
+            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
         }
-        data_dict['acc_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Left')],
-            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Left')],
-            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Left')],
-        }
+        data_dict['acc_data_right']['x']=data_dict['acc_data_right']['x'].reset_index(drop=True)
+        data_dict['acc_data_right']['y']=data_dict['acc_data_right']['y'].reset_index(drop=True)
+        data_dict['acc_data_right']['z']=data_dict['acc_data_right']['z'].reset_index(drop=True)
         
+        data_dict['acc_data_left'] = {
+            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+        }
+        data_dict['acc_data_left']['x']=data_dict['acc_data_left']['x'].reset_index(drop=True)
+        data_dict['acc_data_left']['y']=data_dict['acc_data_left']['y'].reset_index(drop=True)
+        data_dict['acc_data_left']['z']=data_dict['acc_data_left']['z'].reset_index(drop=True)  
+        
+    
         # Separate gyroscope data for each foot
         data_dict['gyro_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Right')],
-            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Right')],
-            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Right')],
+            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
         }
+        data_dict['gyro_data_right']['x']=data_dict['gyro_data_right']['x'].reset_index(drop=True)
+        data_dict['gyro_data_right']['y']=data_dict['gyro_data_right']['y'].reset_index(drop=True)
+        data_dict['gyro_data_right']['z']=data_dict['gyro_data_right']['z'].reset_index(drop=True)
+        
         data_dict['gyro_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Left')],
-            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Left')],
-            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Left')],
+            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
         }
         
+        data_dict['gyro_data_left']['x']=data_dict['gyro_data_left']['x'].reset_index(drop=True)
+        data_dict['gyro_data_left']['y']=data_dict['gyro_data_left']['y'].reset_index(drop=True)
+        data_dict['gyro_data_left']['z']=data_dict['gyro_data_left']['z'].reset_index(drop=True)
+    
         # Separate magnetometer data for each foot
         data_dict['magnetometer_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Right')],
-            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Right')],
-            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Right')],
+            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
         }
+        
+        data_dict['magnetometer_data_right']['x']=data_dict['magnetometer_data_right']['x'].reset_index(drop=True)
+        data_dict['magnetometer_data_right']['y']=data_dict['magnetometer_data_right']['y'].reset_index(drop=True)
+        data_dict['magnetometer_data_right']['z']=data_dict['magnetometer_data_right']['z'].reset_index(drop=True)
+        
+        
         data_dict['magnetometer_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Left')],
-            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Left')],
-            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Left')],
+            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
+            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
         }
+        data_dict['magnetometer_data_left']['x']=data_dict['magnetometer_data_left']['x'].reset_index(drop=True)
+        data_dict['magnetometer_data_left']['y']=data_dict['magnetometer_data_left']['y'].reset_index(drop=True)
+        data_dict['magnetometer_data_left']['z']=data_dict['magnetometer_data_left']['z'].reset_index(drop=True)
         
         # Separate pressure data for each foot
-        data_dict['pressure_heel_right'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Right')]
-        data_dict['pressure_heel_left'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Left')]
+        data_dict['pressure_heel_right'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_heel_right'] = data_dict['pressure_heel_right'].reset_index(drop=True)
+        data_dict['pressure_heel_left'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_heel_left'] = data_dict['pressure_heel_left'].reset_index(drop=True)
+    
+        data_dict['pressure_toe_1_right'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_toe_1_right'] = data_dict['pressure_toe_1_right'].reset_index(drop=True)
         
-        data_dict['pressure_toe_1_right'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Right')]
-        data_dict['pressure_toe_1_left'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Left')]
-        data_dict['pressure_toe_2_right'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Right')]
-        data_dict['pressure_toe_2_left'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Left')]
-
-        # Verbose output
-        if self.verbosity > 0:
-            print("Data preprocessing completed.")
+        data_dict['pressure_toe_1_left'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_toe_1_left'] = data_dict['pressure_toe_1_left'].reset_index(drop=True)
         
-        if self.verbosity > 1:
-            for key in data_dict:
-                print(f"{key}: {len(data_dict[key])} records")
-
+        data_dict['pressure_toe_2_right'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_toe_2_right'] = data_dict['pressure_toe_2_right'].reset_index(drop=True)
+        
+        data_dict['pressure_toe_2_left'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
+        data_dict['pressure_toe_2_left'] = data_dict['pressure_toe_2_left'].reset_index(drop=True)
+        # Now, sort all the DataFrames in the dictionary by the '_time' column (datetime) and reset the index
         return data_dict
-
+    
+    
     def plot_data(self, data_dict):
         # Get the all values for Left and Right Foot Heel Pressure (S0)
         pressure_heel_left = data_dict['pressure_heel_left']
@@ -257,6 +284,8 @@ class GaitAnalysis:
         plt.legend()
         plt.grid(True)
         plt.show()
+        
+        
         
         
 
