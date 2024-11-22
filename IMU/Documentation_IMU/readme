@@ -1,0 +1,5 @@
+This is the documentation for the IMU.
+
+Use 
+sphinx-build -b html . _build
+to use it.
