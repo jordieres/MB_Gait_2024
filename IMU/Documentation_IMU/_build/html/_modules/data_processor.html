@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_processor &mdash; TFM_Sclerosis  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TFM_Sclerosis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_documentation.html">Code Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TFM_Sclerosis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">data_processor</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for data_processor</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Sep 30 20:05:03 2024</span>
+
+<span class="sd">@author: marbo</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pytz</span>
+<span class="kn">from</span> <span class="nn">timezonefinder</span> <span class="kn">import</span> <span class="n">TimezoneFinder</span>
+<span class="kn">from</span> <span class="nn">geopy.distance</span> <span class="kn">import</span> <span class="n">geodesic</span>
+
+<div class="viewcode-block" id="DataProcessor">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor">[docs]</a>
+<span class="k">class</span> <span class="nc">DataProcessor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to process movement data by calculating distances, speeds, movement IDs,</span>
+<span class="sd">    correcting anomalous coordinates, and converting UTC times to local times based on location.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.DataFrame</span>
+<span class="sd">        The input DataFrame containing movement data with columns like &#39;_time&#39;, &#39;lat&#39;, and &#39;lng&#39;.</span>
+<span class="sd">    verbose : int</span>
+<span class="sd">        The verbosity level (0, 1, or 2) to control the amount of logging.</span>
+<span class="sd">    tf : TimezoneFinder</span>
+<span class="sd">        An instance of TimezoneFinder to find time zones based on latitude and longitude.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    haversine(coord1, coord2):</span>
+<span class="sd">        Calculates the great-circle distance between two points on the Earth&#39;s surface.</span>
+<span class="sd">    calculate_speed(coord1, coord2, time1, time2):</span>
+<span class="sd">        Calculates the speed between two coordinates over a time interval.</span>
+<span class="sd">    correct_point(data, i, speed_threshold):</span>
+<span class="sd">        Checks if the point at index i should be corrected based on speed thresholds.</span>
+<span class="sd">    correct_coordinates_with_speed(data, speed_threshold=30):</span>
+<span class="sd">        Corrects middle coordinates if the speed between points exceeds a threshold.</span>
+<span class="sd">    get_coordinates(data, i):</span>
+<span class="sd">        Retrieves coordinates for points at indices i-1, i, and i+1.</span>
+<span class="sd">    convert_utc_to_local(row):</span>
+<span class="sd">        Converts UTC time to local time based on latitude and longitude.</span>
+<span class="sd">    identify_movements():</span>
+<span class="sd">        Identifies unique movements where latitude or longitude changes.</span>
+<span class="sd">    calculate_distances_and_speeds(movements_df):</span>
+<span class="sd">        Calculates distances, time differences, and speeds for movement data.</span>
+<span class="sd">    assign_movement_ids(movements_df, time_spacing=120):</span>
+<span class="sd">        Assigns movement IDs based on distance and time thresholds.</span>
+<span class="sd">    calculate_avg_speeds(movements_df):</span>
+<span class="sd">        Calculates average speeds for each movement ID.</span>
+<span class="sd">    process_data():</span>
+<span class="sd">        Processes the data through all steps and returns the final DataFrame.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the DataProcessor with the provided data and verbosity level.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            A DataFrame containing movement data with columns &#39;_time&#39;, &#39;lat&#39;, and &#39;lng&#39;.</span>
+<span class="sd">        verbose : int, optional</span>
+<span class="sd">            Verbosity level for logging (default is 0, meaning no output).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tf</span> <span class="o">=</span> <span class="n">TimezoneFinder</span><span class="p">()</span>
+        
+
+<div class="viewcode-block" id="DataProcessor.haversine">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.haversine">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">haversine</span><span class="p">(</span><span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the great-circle distance between two coordinates on Earth using the Haversine formula.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coord1 : tuple of float</span>
+<span class="sd">            The (latitude, longitude) of the first point.</span>
+<span class="sd">        coord2 : tuple of float</span>
+<span class="sd">            The (latitude, longitude) of the second point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The distance between the two points in meters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geodesic</span><span class="p">(</span><span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span><span class="o">.</span><span class="n">meters</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.calculate_speed">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.calculate_speed">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">time2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the speed between two points based on the distance and time difference.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coord1 : tuple of float</span>
+<span class="sd">            The (latitude, longitude) of the first point.</span>
+<span class="sd">        coord2 : tuple of float</span>
+<span class="sd">            The (latitude, longitude) of the second point.</span>
+<span class="sd">        time1 : pandas.Timestamp</span>
+<span class="sd">            The timestamp of the first point.</span>
+<span class="sd">        time2 : pandas.Timestamp</span>
+<span class="sd">            The timestamp of the second point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The speed between the two points in kilometers per hour.</span>
+<span class="sd">            Returns infinity if the time difference is zero to avoid division by zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">distance_km</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">haversine</span><span class="p">(</span><span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span>  <span class="c1"># Convert meters to kilometers</span>
+        <span class="n">time_diff_hours</span> <span class="o">=</span> <span class="p">(</span><span class="n">time2</span> <span class="o">-</span> <span class="n">time1</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span>  <span class="c1"># Convert seconds to hours</span>
+
+        <span class="k">if</span> <span class="n">time_diff_hours</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># Avoid division by zero</span>
+
+        <span class="k">return</span> <span class="n">distance_km</span> <span class="o">/</span> <span class="n">time_diff_hours</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.correct_point">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.correct_point">[docs]</a>
+    <span class="k">def</span> <span class="nf">correct_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">speed_threshold</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines if the point at index i is an outlier based on speed thresholds</span>
+<span class="sd">        and corrects it by averaging surrounding points if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing movement data.</span>
+<span class="sd">        i : int</span>
+<span class="sd">            The index of the current point to evaluate.</span>
+<span class="sd">        speed_threshold : float</span>
+<span class="sd">            The speed threshold in km/h to determine anomalies.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if a correction was made, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">time1</span><span class="p">,</span> <span class="n">time2</span><span class="p">,</span> <span class="n">time3</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">]</span>
+
+        <span class="n">speed1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_speed</span><span class="p">(</span><span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">time2</span><span class="p">)</span>
+        <span class="n">speed2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_speed</span><span class="p">(</span><span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span><span class="p">,</span> <span class="n">time2</span><span class="p">,</span> <span class="n">time3</span><span class="p">)</span>
+        <span class="n">speed3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_speed</span><span class="p">(</span><span class="n">coord1</span><span class="p">,</span> <span class="n">coord3</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">time3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">speed1</span> <span class="o">&gt;</span> <span class="n">speed_threshold</span> <span class="ow">or</span> <span class="n">speed2</span> <span class="o">&gt;</span> <span class="n">speed_threshold</span><span class="p">)</span> <span class="ow">and</span> <span class="n">speed3</span> <span class="o">&lt;</span> <span class="n">speed_threshold</span><span class="p">:</span>
+            <span class="c1"># Correct the middle point by averaging the coordinates of the surrounding points</span>
+            <span class="n">avg_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">coord1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">coord3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">avg_lng</span> <span class="o">=</span> <span class="p">(</span><span class="n">coord1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">coord3</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">avg_lat</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">avg_lng</span>
+            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Correction was made</span>
+
+        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># No correction needed</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.correct_coordinates_with_speed">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.correct_coordinates_with_speed">[docs]</a>
+    <span class="k">def</span> <span class="nf">correct_coordinates_with_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">speed_threshold</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterates over the DataFrame to correct any anomalous coordinates based on excessive speeds.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing movement data.</span>
+<span class="sd">        speed_threshold : float, optional</span>
+<span class="sd">            The speed threshold in km/h to determine anomalies (default is 30 km/h).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The DataFrame with corrected coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">corrections</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">correct_point</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">speed_threshold</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Corrected </span><span class="si">{</span><span class="n">corrections</span><span class="si">}</span><span class="s2"> rows due to speed anomalies.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.get_coordinates">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.get_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the coordinates for three consecutive points: previous (i-1), current (i), and next (i+1).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing movement data.</span>
+<span class="sd">        i : int</span>
+<span class="sd">            The index of the current point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            A tuple containing three tuples of coordinates: (coord1, coord2, coord3).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coord1</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">])</span>
+        <span class="n">coord2</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">])</span>
+        <span class="n">coord3</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">coord1</span><span class="p">,</span> <span class="n">coord2</span><span class="p">,</span> <span class="n">coord3</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.convert_utc_to_local">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.convert_utc_to_local">[docs]</a>
+    <span class="k">def</span> <span class="nf">convert_utc_to_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts a UTC timestamp to local time based on the latitude and longitude in the row.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row : pandas.Series</span>
+<span class="sd">            A row from the DataFrame containing &#39;lat&#39;, &#39;lng&#39;, and &#39;time&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            A tuple containing the localized time (pandas.Timestamp) and the timezone string.</span>
+<span class="sd">            If the timezone cannot be determined, returns (None, &#39;Unknown&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lat</span><span class="p">,</span> <span class="n">lng</span><span class="p">,</span> <span class="n">utc_time</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span>
+
+        <span class="n">timezone_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf</span><span class="o">.</span><span class="n">timezone_at</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="n">lat</span><span class="p">,</span> <span class="n">lng</span><span class="o">=</span><span class="n">lng</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">timezone_str</span><span class="p">:</span>
+            <span class="n">local_tz</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">timezone_str</span><span class="p">)</span>
+            <span class="n">local_time</span> <span class="o">=</span> <span class="n">utc_time</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="n">local_tz</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">local_time</span><span class="p">,</span> <span class="n">timezone_str</span>
+
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.identify_movements">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.identify_movements">[docs]</a>
+    <span class="k">def</span> <span class="nf">identify_movements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identifies unique movements by filtering out consecutive duplicate coordinates.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            A DataFrame containing unique movements sorted by time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">movements</span> <span class="o">=</span> <span class="p">[{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s1">&#39;lng&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">}]</span>
+
+        <span class="n">movements</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="s1">&#39;lng&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">or</span>
+               <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">movements</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Identified and sorted </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">movements_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> unique movements.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">movements_df</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.calculate_distances_and_speeds">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.calculate_distances_and_speeds">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_distances_and_speeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">movements_df</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates distances between consecutive points, time differences, and speeds.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        movements_df : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing the unique movements.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The DataFrame with added &#39;distance_m&#39;, &#39;time_diff&#39;, and &#39;speed_m_s&#39; columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calculate distances between consecutive points</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">haversine</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span>
+                <span class="p">(</span><span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;lng&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">movements_df</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;distance_m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">distances</span>
+
+        <span class="c1"># Calculate time differences between consecutive points</span>
+        <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;time_diff&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+        <span class="c1"># Calculate speeds in meters per second</span>
+        <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;speed_m_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;distance_m&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;time_diff&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Handle any NaN or infinite values</span>
+        <span class="n">movements_df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">movements_df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculated distances, time differences, and speeds.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">movements_df</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.assign_movement_ids">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.assign_movement_ids">[docs]</a>
+    <span class="k">def</span> <span class="nf">assign_movement_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">movements_df</span><span class="p">,</span> <span class="n">time_spacing</span><span class="o">=</span><span class="mi">120</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assigns movement IDs based on distance and time thresholds to segment movements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        movements_df : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing movement data with distances and time differences.</span>
+<span class="sd">        time_spacing : int, optional</span>
+<span class="sd">            The threshold in seconds for time or distance to start a new movement (default is 120 seconds).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The DataFrame with an added &#39;movement_id&#39; column.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">movement_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">movement_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">movements_df</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;distance_m&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">time_spacing</span> <span class="ow">or</span> \
+               <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;time_diff&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">time_spacing</span><span class="p">:</span>
+                <span class="n">movement_id</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">movement_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">movement_id</span><span class="p">)</span>
+
+        <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;movement_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">movement_list</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assigned movement IDs based on time and distance (threshold: </span><span class="si">{</span><span class="n">time_spacing</span><span class="si">}</span><span class="s2"> seconds).&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">movements_df</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.calculate_avg_speeds">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.calculate_avg_speeds">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_avg_speeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">movements_df</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the average speed for each movement ID.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        movements_df : pandas.DataFrame</span>
+<span class="sd">            The DataFrame containing movement data with movement IDs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The DataFrame with an added &#39;avg_speed_m_s&#39; column representing average speed per movement.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Group by movement_id and calculate average speed, skipping the first speed (which is 0 or invalid)</span>
+        <span class="n">avg_speeds</span> <span class="o">=</span> <span class="n">movements_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;movement_id&#39;</span><span class="p">)[</span><span class="s1">&#39;speed_m_s&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Map the average speeds back to the DataFrame</span>
+        <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;avg_speed_m_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">movements_df</span><span class="p">[</span><span class="s1">&#39;movement_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">avg_speeds</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculated average speeds for each movement.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">movements_df</span></div>
+
+
+<div class="viewcode-block" id="DataProcessor.process_data">
+<a class="viewcode-back" href="../code_documentation.html#data_processor.DataProcessor.process_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_spacing</span><span class="o">=</span><span class="mi">120</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes the movement data through all steps: cleaning, calculating distances and speeds,</span>
+<span class="sd">        correcting anomalies, assigning movement IDs, and converting times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_spacing : int, optional</span>
+<span class="sd">            The threshold in seconds for time or distance to start a new movement (default is 120 seconds).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The processed DataFrame with additional columns:</span>
+<span class="sd">            &#39;distance_m&#39;, &#39;time_diff&#39;, &#39;speed_m_s&#39;, &#39;movement_id&#39;, &#39;avg_speed_m_s&#39;,</span>
+<span class="sd">            &#39;local_time&#39;, &#39;local_timezone&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Starting data processing...&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Step 1: Convert &#39;lat&#39; and &#39;lng&#39; to float</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;lng&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Converted &#39;lat&#39; and &#39;lng&#39; columns to float.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Step 2 &amp; 3: Identify unique movements and sort them</span>
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">identify_movements</span><span class="p">()</span>
+
+        <span class="c1"># Step 4: Calculate distances, time differences, and speeds</span>
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distances_and_speeds</span><span class="p">(</span><span class="n">movements_df</span><span class="p">)</span>
+
+        <span class="c1"># Step 5: Correct coordinates based on speed anomalies</span>
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correct_coordinates_with_speed</span><span class="p">(</span><span class="n">movements_df</span><span class="p">)</span>
+
+        <span class="c1"># Step 6: Assign movement IDs</span>
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assign_movement_ids</span><span class="p">(</span><span class="n">movements_df</span><span class="p">,</span> <span class="n">time_spacing</span><span class="o">=</span><span class="n">time_spacing</span><span class="p">)</span>
+
+        <span class="c1"># Step 7: Calculate average speeds per movement</span>
+        <span class="n">movements_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_avg_speeds</span><span class="p">(</span><span class="n">movements_df</span><span class="p">)</span>
+
+        <span class="c1"># Step 8: Convert UTC times to local times</span>
+        <span class="n">movements_df</span><span class="p">[[</span><span class="s1">&#39;local_time&#39;</span><span class="p">,</span> <span class="s1">&#39;local_timezone&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">movements_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_utc_to_local</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">result_type</span><span class="o">=</span><span class="s2">&quot;expand&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Converted UTC times to local times based on coordinates.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final processed DataFrame:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">movements_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">movements_df</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Marti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

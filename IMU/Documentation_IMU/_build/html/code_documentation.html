@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Documentation &mdash; TFM_Sclerosis  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to TFM_Sclerosis’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TFM_Sclerosis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#data-fetcher-module">Data Fetcher Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-overview">Module Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datafetcher">DataFetcher</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#method-details">Method Details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build-query">build_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fetch-data">fetch_data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data-processor-module">Data Processor Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Module Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dataprocessor">DataProcessor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Method Details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#haversine">haversine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculate-speed">calculate_speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#correct-point">correct_point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#correct-coordinates-with-speed">correct_coordinates_with_speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-coordinates">get_coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-utc-to-local">convert_utc_to_local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identify-movements">identify_movements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculate-distances-and-speeds">calculate_distances_and_speeds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assign-movement-ids">assign_movement_ids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculate-avg-speeds">calculate_avg_speeds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#process-data">process_data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#map-generator-module">Map Generator Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-map_generator">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#main-ext-gps-module">Main Ext GPS Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-main_script">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TFM_Sclerosis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Code Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/code_documentation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="code-documentation">
+<h1>Code Documentation<a class="headerlink" href="#code-documentation" title="Link to this heading"></a></h1>
+</section>
+<section id="data-fetcher-module">
+<h1>Data Fetcher Module<a class="headerlink" href="#data-fetcher-module" title="Link to this heading"></a></h1>
+<p>The <cite>data_fetcher</cite> module contains the <cite>DataFetcher</cite> class, which is used to retrieve data from InfluxDB for analysis.</p>
+<section id="module-overview">
+<h2>Module Overview<a class="headerlink" href="#module-overview" title="Link to this heading"></a></h2>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<section id="datafetcher">
+<h3>DataFetcher<a class="headerlink" href="#datafetcher" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="method-details">
+<h2>Method Details<a class="headerlink" href="#method-details" title="Link to this heading"></a></h2>
+<section id="build-query">
+<h3>build_query<a class="headerlink" href="#build-query" title="Link to this heading"></a></h3>
+</section>
+<section id="fetch-data">
+<h3>fetch_data<a class="headerlink" href="#fetch-data" title="Link to this heading"></a></h3>
+</section>
+</section>
+</section>
+<section id="data-processor-module">
+<h1>Data Processor Module<a class="headerlink" href="#data-processor-module" title="Link to this heading"></a></h1>
+<p>The <cite>data_processor</cite> module contains the <cite>DataProcessor</cite> class, which is used to process movement data. It handles calculations for distances, speeds, and movement IDs, corrects coordinates, and converts UTC timestamps to local times based on geolocation data.</p>
+<section id="id1">
+<h2>Module Overview<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+</section>
+<section id="id2">
+<h2>Classes<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<section id="dataprocessor">
+<h3>DataProcessor<a class="headerlink" href="#dataprocessor" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="id3">
+<h2>Method Details<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<section id="haversine">
+<h3>haversine<a class="headerlink" href="#haversine" title="Link to this heading"></a></h3>
+</section>
+<section id="calculate-speed">
+<h3>calculate_speed<a class="headerlink" href="#calculate-speed" title="Link to this heading"></a></h3>
+</section>
+<section id="correct-point">
+<h3>correct_point<a class="headerlink" href="#correct-point" title="Link to this heading"></a></h3>
+</section>
+<section id="correct-coordinates-with-speed">
+<h3>correct_coordinates_with_speed<a class="headerlink" href="#correct-coordinates-with-speed" title="Link to this heading"></a></h3>
+</section>
+<section id="get-coordinates">
+<h3>get_coordinates<a class="headerlink" href="#get-coordinates" title="Link to this heading"></a></h3>
+</section>
+<section id="convert-utc-to-local">
+<h3>convert_utc_to_local<a class="headerlink" href="#convert-utc-to-local" title="Link to this heading"></a></h3>
+</section>
+<section id="identify-movements">
+<h3>identify_movements<a class="headerlink" href="#identify-movements" title="Link to this heading"></a></h3>
+</section>
+<section id="calculate-distances-and-speeds">
+<h3>calculate_distances_and_speeds<a class="headerlink" href="#calculate-distances-and-speeds" title="Link to this heading"></a></h3>
+</section>
+<section id="assign-movement-ids">
+<h3>assign_movement_ids<a class="headerlink" href="#assign-movement-ids" title="Link to this heading"></a></h3>
+</section>
+<section id="calculate-avg-speeds">
+<h3>calculate_avg_speeds<a class="headerlink" href="#calculate-avg-speeds" title="Link to this heading"></a></h3>
+</section>
+<section id="process-data">
+<h3>process_data<a class="headerlink" href="#process-data" title="Link to this heading"></a></h3>
+</section>
+</section>
+</section>
+<section id="map-generator-module">
+<h1>Map Generator Module<a class="headerlink" href="#map-generator-module" title="Link to this heading"></a></h1>
+<p>This module provides the <cite>MapGenerator</cite> class, which is designed for visualizing movements data using Folium and Plotly. The class can produce interactive maps with customizable markers and lines representing speed and movement across locations.</p>
+<section id="module-map_generator">
+<span id="id4"></span><h2>Classes<a class="headerlink" href="#module-map_generator" title="Link to this heading"></a></h2>
+</section>
+<section id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Link to this heading"></a></h2>
+</section>
+</section>
+<section id="main-ext-gps-module">
+<h1>Main Ext GPS Module<a class="headerlink" href="#main-ext-gps-module" title="Link to this heading"></a></h1>
+<p>This module is a command-line interface for fetching, processing, and visualizing movement data using configurable options such as verbosity, date range, and output settings. The main function coordinates data retrieval, processing, and map generation.</p>
+<section id="module-main_script">
+<span id="id5"></span><h2>Classes<a class="headerlink" href="#module-main_script" title="Link to this heading"></a></h2>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to TFM_Sclerosis’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Marti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

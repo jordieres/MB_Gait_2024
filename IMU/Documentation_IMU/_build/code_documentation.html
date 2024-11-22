@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Documentation &mdash; TFM_Sclerosis  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to TFM_Sclerosis’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TFM_Sclerosis
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#gaitanalysis-class">GaitAnalysis Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#trajectoryanalyzer">TrajectoryAnalyzer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage-example">Usage Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#interpolator">Interpolator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Usage Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#orientationanalyzer-class">OrientationAnalyzer Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id12">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">Usage Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#main-script-for-gait-and-trajectory-analysis">Main Script for Gait and Trajectory Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">Usage Example</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TFM_Sclerosis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Code Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/code_documentation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="code-documentation">
+<h1>Code Documentation<a class="headerlink" href="#code-documentation" title="Link to this heading"></a></h1>
+</section>
+<section id="gaitanalysis-class">
+<h1>GaitAnalysis Class<a class="headerlink" href="#gaitanalysis-class" title="Link to this heading"></a></h1>
+<p>The <cite>GaitAnalysis</cite> class is designed for analyzing gait data, including processing and visualizing sensor data (e.g., acceleration, gyroscope, magnetometer, pressure) for left and right feet.</p>
+<section id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Link to this heading"></a></h2>
+<p>### __init__(self, data, verbosity=0)</p>
+<p>Initializes the <cite>GaitAnalysis</cite> class with the provided data.</p>
+<p>Arguments:
+- <strong>data</strong> (<cite>pd.DataFrame</cite>): The dataframe containing sensor data.
+- <strong>verbosity</strong> (<cite>int</cite>): Verbosity level (0 = no output, 1 = minimal output, 2 = detailed output).</p>
+<p>### preprocess_data(self)</p>
+<p>Preprocesses and separates data based on sensor types and foot placement (Right/Left). Filters the data to create separate DataFrames for acceleration, gyroscope, magnetometer, and pressure data for both the right and left foot. All data is sorted by the <cite>_time</cite> column.</p>
+<p>Returns:
+- <strong>dict</strong>: A dictionary containing the processed DataFrames for the different sensor types and foot placements.</p>
+<p>### plot_data(self, data_dict)</p>
+<p>Plots various sensor data for both left and right feet. It creates multiple plots for heel pressure, toe pressure, acceleration, gyroscope, and magnetometer data. The plots can include specific slices of the data (e.g., the first 500 values or a detailed view of the data).</p>
+<p>Arguments:
+- <strong>data_dict</strong> (<cite>dict</cite>): A dictionary containing the processed data returned by the <cite>preprocess_data()</cite> method.</p>
+<p>The following plots are generated:
+- Heel Pressure (S0) for Left and Right Foot
+- A closer look at the Heel Pressure (S0)
+- Heel Pressure (S0) and Toe Pressure (S1) for Right Foot
+- Accelerometer Data (X, Y, Z) for Left Foot
+- Gyroscope Data (X, Y, Z) for Left Foot
+- Magnetometer Data for Left Foot</p>
+<p>Examples of Generated Plots:
+1. Heel Pressure for Left and Right Foot:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Plots the pressure data from the heel sensors (S0) for both the left and right feet.</p></li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Heel Pressure for Right Foot with Toe Pressure (S1):
+- Plots the heel pressure (S0) and toe pressure (S1) for the right foot.</p></li>
+<li><p>Accelerometer and Gyroscope Data:
+- Plots the X, Y, and Z values for both accelerometer and gyroscope data over time for the left foot.</p></li>
+<li><p>Magnetometer Data for Left Foot:
+- Plots the X, Y, and Z magnetic field strength values over time and computes the heading (yaw angle) in degrees.</p></li>
+</ol>
+</section>
+</section>
+<section id="trajectoryanalyzer">
+<h1>TrajectoryAnalyzer<a class="headerlink" href="#trajectoryanalyzer" title="Link to this heading"></a></h1>
+<p>The <cite>TrajectoryAnalyzer</cite> class processes sensor data (accelerometer, gyroscope, and magnetometer) to compute and visualize the movement trajectories of two feet (typically left and right) during gait analysis.</p>
+<section id="id1">
+<h2>Methods<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>### <cite>__init__(self, data, dt=0.01, verbosity=0)</cite>
+Initializes the <cite>TrajectoryAnalyzer</cite> class.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>data</cite>: A dictionary containing accelerometer, gyroscope, and magnetometer data.
+- <cite>dt</cite>: The sampling interval between sensor data points (in seconds). Default is 0.01.
+- <cite>verbosity</cite>: Defines the level of verbosity for print statements. (0: silent, 1: basic, 2: detailed).</p></li>
+<li><p><strong>Purpose</strong>: Initializes the class with provided data, sampling interval, and verbosity level. Optionally prints initialization details based on verbosity.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>low_pass_filter(self, data, alpha=0.1)</cite>
+Applies a simple low-pass filter to smooth out noisy sensor data.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>data</cite>: The signal (e.g., accelerometer data) to be filtered.
+- <cite>alpha</cite>: The smoothing factor, between 0 and 1, where values closer to 1 keep more of the original signal.</p></li>
+<li><p><strong>Returns</strong>: The filtered signal.</p></li>
+<li><p><strong>Purpose</strong>: Filters the input data using an exponential moving average to reduce high-frequency noise.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>compute_yaw(self, gyro_yaw, mag_x, mag_y, alpha=0.98)</cite>
+Computes the yaw angle by fusing gyroscope and magnetometer data using a complementary filter.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>gyro_yaw</cite>: Yaw angle computed from the gyroscope.
+- <cite>mag_x</cite>: Magnetometer X-axis data.
+- <cite>mag_y</cite>: Magnetometer Y-axis data.
+- <cite>alpha</cite>: Weighting factor for the complementary filter, where higher values give more weight to the gyroscope data.</p></li>
+<li><p><strong>Returns</strong>: The fused yaw angle.</p></li>
+<li><p><strong>Purpose</strong>: Combines gyroscope and magnetometer data to estimate a more accurate yaw angle.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>transform_to_global_frame(self, acc_x, acc_y, acc_z, orientation)</cite>
+Transforms acceleration data from the local sensor frame to a global frame using the sensor’s orientation.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>acc_x</cite>, <cite>acc_y</cite>, <cite>acc_z</cite>: Acceleration values in the local X, Y, and Z axes.
+- <cite>orientation</cite>: A dictionary containing roll, pitch, and yaw angles.</p></li>
+<li><p><strong>Returns</strong>: The transformed acceleration in the global frame (x, y, z).</p></li>
+<li><p><strong>Purpose</strong>: Converts the sensor’s local frame of reference to a global frame using the sensor’s orientation.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>integrate(self, data)</cite>
+Performs cumulative integration on the given data (typically acceleration) to compute velocity and position.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>data</cite>: The input data, which could be acceleration or velocity.</p></li>
+<li><p><strong>Returns</strong>: The computed velocity and position arrays.</p></li>
+<li><p><strong>Purpose</strong>: Integrates the data twice: once to get velocity (from acceleration) and once more to get position (from velocity).</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>compute_trajectories(self)</cite>
+Computes the trajectories for both the left and right feet based on accelerometer, gyroscope, and magnetometer data.</p>
+<ul class="simple">
+<li><p><strong>Returns</strong>: A dictionary containing the computed trajectories for both feet, with position arrays for each axis (x, y, z).</p></li>
+<li><p><strong>Purpose</strong>: Processes sensor data for each foot, applies filtering, computes orientation, transforms data to the global frame, integrates to find position, and stores the resulting trajectories.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>plot_trajectories(self, trajectories)</cite>
+Plots the computed trajectories for both the left and right feet.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>trajectories</cite>: A dictionary containing the position data for the left and right feet.</p></li>
+<li><p><strong>Purpose</strong>: Visualizes the X and Y positions of both feet in a 2D plot, showing their respective movement trajectories.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="usage-example">
+<h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading"></a></h2>
+<p><a href="#id2"><span class="problematic" id="id3">``</span></a><a href="#id4"><span class="problematic" id="id5">`</span></a>python
+# Initialize the trajectory analyzer with data, sampling interval, and verbosity level
+analyzer = TrajectoryAnalyzer(data=my_data, dt=0.01, verbosity=1)</p>
+<p># Compute trajectories for both left and right feet
+trajectories = analyzer.compute_trajectories()</p>
+<p># Plot the computed trajectories
+analyzer.plot_trajectories(trajectories)</p>
+</section>
+</section>
+<section id="interpolator">
+<h1>Interpolator<a class="headerlink" href="#interpolator" title="Link to this heading"></a></h1>
+<p>The <cite>Interpolator</cite> class is used to interpolate sensor data for the left and right groups (e.g., left and right pressure sensors). The class ensures that both groups have the same number of data points after interpolation.</p>
+<section id="id6">
+<h2>Methods<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<p>### <cite>__init__(self, data_dict, verbosity=0)</cite>
+Initializes the <cite>Interpolator</cite> class with the given data dictionary.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>data_dict</cite>: A dictionary containing the data to be interpolated (e.g., accelerometer, pressure data).
+- <cite>verbosity</cite>: Defines the level of verbosity for print statements. (0: silent, 1: basic, 2: detailed).</p></li>
+<li><p><strong>Purpose</strong>: Initializes the class with the provided data dictionary and verbosity level. Optionally prints initialization details based on verbosity.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>interpolate_data(self)</cite>
+Interpolates the data in the group (left or right) with fewer data points. After interpolation, both groups will have the same number of data points.</p>
+<ul class="simple">
+<li><p><strong>Purpose</strong>:
+- Finds which group (left or right) has fewer data points.
+- Interpolates the data of the smaller group to match the number of data points in the larger group.
+- Works with both simple and nested data structures (data with sub-keys).</p></li>
+<li><p><strong>Verbosity:</strong>
+- Level 1 or higher: Prints a message indicating the interpolation has started and completed.
+- Level 2 or higher: Prints detailed information about the interpolation process for each key and sub-key.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>get_interpolated_data(self)</cite>
+Returns the interpolated data dictionary.</p>
+<ul class="simple">
+<li><p><strong>Returns</strong>:
+- The dictionary containing the interpolated data for both the left and right groups.</p></li>
+<li><p><strong>Purpose</strong>: Provides access to the interpolated data after the <cite>interpolate_data()</cite> method has been executed.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="id7">
+<h2>Usage Example<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p><a href="#id8"><span class="problematic" id="id9">``</span></a><a href="#id10"><span class="problematic" id="id11">`</span></a>python
+# Initialize the interpolator with a data dictionary and verbosity level
+interpolator = Interpolator(data_dict=my_data_dict, verbosity=1)</p>
+<p># Interpolate the data
+interpolator.interpolate_data()</p>
+<p># Retrieve the interpolated data
+interpolated_data = interpolator.get_interpolated_data()</p>
+</section>
+</section>
+<section id="orientationanalyzer-class">
+<h1>OrientationAnalyzer Class<a class="headerlink" href="#orientationanalyzer-class" title="Link to this heading"></a></h1>
+<p>The <cite>OrientationAnalyzer</cite> class processes and analyzes magnetometer data to compute heading (yaw angle), detect turns, and visualize the heading over time. It provides methods for cleaning and smoothing data, as well as detecting significant changes in orientation.</p>
+<section id="id12">
+<h2>Methods<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>### <cite>__init__(self, mag_x, mag_y, mag_z, verbosity=0)</cite>
+Initializes the <cite>OrientationAnalyzer</cite> with magnetometer data.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>mag_x</cite>: Magnetometer data along the X-axis.
+- <cite>mag_y</cite>: Magnetometer data along the Y-axis.
+- <cite>mag_z</cite>: Magnetometer data along the Z-axis.
+- <cite>verbosity</cite>: Level of verbosity for print statements (0: silent, 1: basic, 2: detailed).</p></li>
+<li><p><strong>Purpose</strong>: Initializes the class with magnetometer data and an optional verbosity level for output.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>remove_outliers(self, data, threshold=3)</cite>
+Removes outliers from the provided data using the Z-score method.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>data</cite>: The magnetometer data (x, y, or z axis).
+- <cite>threshold</cite>: Z-score threshold for detecting outliers.</p></li>
+<li><p><strong>Returns</strong>: Cleaned data with outliers removed.</p></li>
+<li><p><strong>Purpose</strong>: Filters out data points that deviate significantly (as defined by the threshold) from the mean, improving data quality for analysis.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>clean_data(self)</cite>
+Cleans the magnetometer data by removing outliers from the X, Y, and Z axes.</p>
+<ul class="simple">
+<li><p><strong>Purpose</strong>: Ensures that outliers are removed from all magnetometer data axes (X, Y, Z) before further processing.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>smooth_data(self, window_size=1000)</cite>
+Smooths the magnetometer data using a simple moving average.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>window_size</cite>: Size of the moving window (number of samples to average).</p></li>
+<li><p><strong>Purpose</strong>: Smooths the X, Y, and Z axis data to reduce noise, making the data more suitable for further analysis (e.g., heading computation).</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>compute_heading(self)</cite>
+Computes the heading (yaw angle) from the smoothed magnetometer data.</p>
+<ul class="simple">
+<li><p><strong>Returns</strong>: Heading angles in radians.</p></li>
+<li><p><strong>Purpose</strong>: Calculates the heading by normalizing the magnetometer data and using the <cite>arctan2</cite> function to compute the orientation angle.</p></li>
+<li><p><strong>Raises</strong>:
+- <cite>ValueError</cite> if the magnetometer data has not been smoothed.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>detect_turns(self, heading, threshold=np.radians(15))</cite>
+Detects turns based on changes in the heading.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>heading</cite>: Array of heading angles (in radians).
+- <cite>threshold</cite>: Minimum change in heading (in radians) to be considered a turn.</p></li>
+<li><p><strong>Returns</strong>: Indices where significant turns are detected.</p></li>
+<li><p><strong>Purpose</strong>: Identifies turns by detecting where the change in heading exceeds a predefined threshold, which represents a turn in the motion.</p></li>
+</ul>
+<p>—</p>
+<p>### <cite>plot_heading(self, heading, turn_indices=None)</cite>
+Plots the heading over time, highlighting the detected turns if provided.</p>
+<ul class="simple">
+<li><p><strong>Parameters:</strong>
+- <cite>heading</cite>: Array of heading angles (in radians).
+- <cite>turn_indices</cite>: Indices where turns are detected.</p></li>
+<li><p><strong>Purpose</strong>: Visualizes the heading angles over time and optionally marks the detected turns on the plot.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="id13">
+<h2>Usage Example<a class="headerlink" href="#id13" title="Link to this heading"></a></h2>
+<p><a href="#id14"><span class="problematic" id="id15">``</span></a><a href="#id16"><span class="problematic" id="id17">`</span></a>python
+# Initialize the OrientationAnalyzer with magnetometer data and verbosity level
+analyzer = OrientationAnalyzer(mag_x=my_mag_x, mag_y=my_mag_y, mag_z=my_mag_z, verbosity=1)</p>
+<p># Clean and smooth the data
+analyzer.smooth_data(window_size=500)</p>
+<p># Compute the heading
+heading = analyzer.compute_heading()</p>
+<p># Detect turns in the heading data
+turns = analyzer.detect_turns(heading, threshold=np.radians(15))</p>
+<p># Plot the heading with detected turns
+analyzer.plot_heading(heading, turn_indices=turns)</p>
+</section>
+</section>
+<section id="main-script-for-gait-and-trajectory-analysis">
+<h1>Main Script for Gait and Trajectory Analysis<a class="headerlink" href="#main-script-for-gait-and-trajectory-analysis" title="Link to this heading"></a></h1>
+<p>This script performs an end-to-end workflow to load data, process it, and analyze various aspects of gait, trajectory, and orientation. The workflow includes loading data from a pickle file, performing gait analysis, interpolating data, computing trajectories, and analyzing the orientation based on magnetometer data.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<p>### <cite>VAction</cite>
+A custom <cite>argparse</cite> action to handle verbosity levels. It increments the verbosity level based on the number of <cite>v</cite> characters in the provided argument.</p>
+<ul class="simple">
+<li><p><strong>Attributes</strong>:
+- <cite>values</cite>: The verbosity level set by the user, determined by the count of <cite>v</cite> characters in the argument.</p></li>
+<li><p><strong>Methods</strong>:
+- <cite>__call__(self, parser, args, values, option_string=None)</cite>: Determines the verbosity level based on the input and sets it in the parsed arguments.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<p>### <cite>main()</cite>
+The main function that orchestrates the workflow of loading, processing, and analyzing data.</p>
+<ul class="simple">
+<li><p><strong>Returns</strong>:
+- <cite>data_dict</cite>: Dictionary containing the processed data after gait analysis and interpolation.
+- <cite>interpolated_data</cite>: Dictionary containing the interpolated data after balancing the left and right groups.</p></li>
+<li><p><strong>Process</strong>:
+1. <strong>Argument Parsing</strong>: Handles command-line arguments for file path, filename, and verbosity level.
+2. <strong>Data Loading</strong>: Loads data from a pickle file using the <cite>DataLoader</cite> class.
+3. <strong>Gait Analysis</strong>: Performs preprocessing on the data using the <cite>GaitAnalysis</cite> class.
+4. <strong>Data Interpolation</strong>: Balances the left and right groups using the <cite>Interpolator</cite> class.
+5. <strong>Trajectory Analysis</strong>: Computes and plots the trajectories based on the interpolated data using the <cite>TrajectoryAnalyzer</cite> class.
+6. <strong>Orientation Analysis</strong>: Analyzes the heading and detects turns using the <cite>OrientationAnalyzer</cite> class based on magnetometer data.</p></li>
+</ul>
+<p>—</p>
+</section>
+<section id="id18">
+<h2>Usage Example<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<p><a href="#id19"><span class="problematic" id="id20">``</span></a><a href="#id21"><span class="problematic" id="id22">`</span></a>bash
+python script.py -p /path/to/data -f data_file.pkl -v 2</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to TFM_Sclerosis’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Marti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
