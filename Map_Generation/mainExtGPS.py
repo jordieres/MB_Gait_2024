@@ -94,7 +94,7 @@ def main():
 
     # Load config
     config = Config()
-    
+
     # Parse command-line arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-f", "--from", type=str, required=True, help="Date for starting the analysis. Format YYYY-MM-DD.")
@@ -105,16 +105,15 @@ def main():
     ap.add_argument("-o", "--output", type=int, choices=range(0, 3), default=2, help="Choose a number from 0 to 2 (default is 2)")
     ap.add_argument("-t", "--time-spacing", type=int, default=120, help="Time spacing in seconds for segmenting movements (default is 120).")
     args = vars(ap.parse_args())
-    
+
     verbosity_level = int(args['verbose']) if args['verbose'] else 0
-    
+
     if verbosity_level > 0:
         print(f"Starting data processing with verbosity level {verbosity_level}")
-        
+
     if verbosity_level > 1:
         print(f"Loaded configuration: {config}\n")
-        
-        
+
     # Create DataFetcher and fetch the data
     data_fetcher = DataFetcher(
         qtok=args['qtok'],
@@ -124,28 +123,22 @@ def main():
         token=config.token,
         org=config.org,
         url=config.url,
-        verbose = verbosity_level
+        verbose=verbosity_level
     )
-   
+
     raw_data = data_fetcher.fetch_data()
-    
+
     # Process the data with the provided time_spacing argument
     data_processor = DataProcessor(raw_data, verbosity_level)
-    
-    movements_df = data_processor.process_data(time_spacing=args['time_spacing'])
-    
-    
-    # Generate maps
-    map_generator = MapGenerator(movements_df, verbosity_level)
-    
-    map_generator.generate_plotly_map(args['qtok'], args['from'], args['until'])
-   
-    # Save movements_df to a pickle file
-    data_fetcher.save_to_pickle(movements_df, output_dir='output_data', filename='movements.pkl')
+    data_processor.process_data(time_spacing=args['time_spacing'])
 
-   
-   
-    
+    # Generate maps using the processed DataFrame from data_processor
+    map_generator = MapGenerator(data_processor.movements_df, verbosity_level)
+    map_generator.generate_plotly_map(args['qtok'], args['from'], args['until'])
+
+    # Save movements_df to a pickle file
+    data_fetcher.save_to_pickle(data_processor.movements_df, output_dir='output_data', filename='movements.pkl')
+
     if verbosity_level > 0:
         print("\nProgram execution completed.")
 
