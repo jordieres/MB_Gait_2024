@@ -1,7 +1,9 @@
 import argparse
 from load_pickle import DataLoader
 from gait_analysis import GaitAnalysis
-
+from Interpolator import Interpolator
+from TrajectoryAnalyzer import TrajectoryAnalyzer
+from OrientationAnalyzer import OrientationAnalyzer
 
 class VAction(argparse.Action):
     """
@@ -65,13 +67,23 @@ class VAction(argparse.Action):
             except ValueError:
                 self.values = values.count('v') + 1
         setattr(args, self.dest, self.values)
-        
-        
+
 def main():
-    
-    
-    
-    
+    """
+    Main function to handle the overall workflow of loading data, performing gait analysis, 
+    interpolating data, computing trajectories, and analyzing orientation.
+
+    The function parses command-line arguments, loads data from a pickle file, performs preprocessing, 
+    interpolates the data to balance groups, computes trajectories, and analyzes the orientation using 
+    magnetometer data.
+
+    Returns:
+    -------
+    data_dict : dict
+        Dictionary containing the processed data after gait analysis and interpolation.
+    interpolated_data : dict
+        Dictionary containing the interpolated data after balancing the left and right groups.
+    """
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Load a DataFrame from a pickle file.")
     parser.add_argument("-p", "--path", type=str, required=True, help="The directory where the pickle file is located.")
@@ -87,9 +99,9 @@ def main():
     # Load DataFrame from pickle
     raw_data = loader.load_from_pickle(file_path=args.path, filename=args.filename)
     if args.verbosity > 0:
-        print("DataFrame successfully loaded from pickle")
-                
-                # Print time range if 'time' column exists
+        print("DataFrame successfully loaded from pickle.")
+        
+        # Print time range if 'time' column exists
         if '_time' in raw_data.columns:
             start_time = raw_data['_time'].iloc[0].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Keep two decimal places
             end_time = raw_data['_time'].iloc[-1].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]    # Keep two decimal places
@@ -99,25 +111,50 @@ def main():
         if args.verbosity > 0:
             print("Data loaded successfully for further processing.")
     
-    
     # Run gait analysis
     # Instantiate GaitAnalysis with data and verbosity level from arguments
     gait_analysis = GaitAnalysis(raw_data, verbosity=args.verbosity)
 
-    
     data_dict = gait_analysis.preprocess_data()
-    gait_analysis.plot_data(data_dict)
     
+    # Initialize Interpolator with data_dict and verbosity
+    interpolator = Interpolator(data_dict, verbosity=args.verbosity)
     
+    # Interpolate data to balance the "left" and "right" groups
+    interpolator.interpolate_data()
+
+    # Get the interpolated data
+    interpolated_data = interpolator.get_interpolated_data()
     
-    return data_dict
+    # Run trajectory analysis
+    analyzer = TrajectoryAnalyzer(interpolated_data, dt=0.01, verbosity=args.verbosity)
+    trajectories = analyzer.compute_trajectories()
+    analyzer.plot_trajectories(trajectories)
+    
+    # Extract magnetometer data
+    mag_x = data_dict['magnetometer_data_right']['x']['_value'].to_numpy()
+    mag_y = data_dict['magnetometer_data_right']['y']['_value'].to_numpy()
+    mag_z = data_dict['magnetometer_data_right']['z']['_value'].to_numpy()
+    
+    # Initialize the orientation analyzer with the magnetometer data
+    orientation_analyzer = OrientationAnalyzer(mag_x, mag_y, mag_z, verbosity=args.verbosity)
+    
+    # Smooth the magnetometer data
+    orientation_analyzer.smooth_data(window_size=5)  # You can adjust the window size
+    
+    # Compute heading from the magnetometer data
+    heading = orientation_analyzer.compute_heading()
+    
+    # Detect turns in the heading
+    turn_indices = orientation_analyzer.detect_turns(heading)
+    
+    # Plot heading and detected turns
+    orientation_analyzer.plot_heading(heading, turn_indices)
+    
+    return data_dict, interpolated_data
 
-
-
-
-
-
-
+if __name__ == "__main__":
+    data_dict, interpolated_data = main()
 
 
 
