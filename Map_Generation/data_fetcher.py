@@ -63,7 +63,24 @@ class DataFetcher:
         return query
     
     def fetch_data(self):
-        
+        """
+        Fetches data from the InfluxDB based on the query parameters provided.
+    
+        This method performs the following steps:
+            1. Prints a message indicating the start of data fetching, if verbosity is enabled.
+            2. Builds a query string for fetching data from InfluxDB based on provided parameters.
+            3. Executes the query using the InfluxDB client.
+            4. Aggregates the results into a pandas DataFrame.
+            5. Resets the DataFrame index to ensure a clean structure.
+            6. Prints information about the fetched data if verbosity level is set to 1 or higher.
+    
+        Returns:
+        -------
+        pd.DataFrame
+            A DataFrame containing the fetched data with columns corresponding to the records 
+            retrieved from InfluxDB.
+
+        """  
         if self.verbose > 0:
             print(f"\nFetching data for token: {self.qtok}, Foot: {self.pie}, from {self.start_date} to {self.end_date}")
         
