@@ -318,6 +318,128 @@ turns = analyzer.detect_turns(heading, threshold=np.radians(15))
 # Plot the heading with detected turns
 analyzer.plot_heading(heading, turn_indices=turns)
 
+MyIMUSensor Class
+=================
+
+This module defines a custom IMU sensor class, `MyIMUSensor`, which inherits from `IMU_Base`. It is designed to retrieve and process IMU data from a file or a dictionary. The data typically includes accelerometer, gyroscope (angular velocity), and magnetometer data, and the class organizes this data into relevant attributes.
+
+Class: `MyIMUSensor`
+---------------------
+
+The `MyIMUSensor` class extends the `IMU_Base` class to provide functionality for loading and storing IMU data.
+
+### **Attributes**:
+- `acc`: Numpy array containing accelerometer data (3D acceleration).
+- `omega`: Numpy array containing gyroscope data (angular velocity).
+- `mag`: Numpy array containing magnetometer data (optional).
+- `rate`: Sampling rate of the IMU sensor, set to 50 Hz by default.
+- `source`: The source from which the IMU data was loaded (file path or `None` if data is passed directly).
+  
+### **Methods**:
+
+#### `get_data(self, in_file=None, in_data=None)`
+Retrieves IMU data from either a file or a dictionary and sets the relevant attributes for the accelerometer, gyroscope, and magnetometer data. The method should be implemented according to the specific data format.
+
+**Parameters**:
+- `in_file` (str, optional): Path to a file (e.g., CSV, TXT) containing the IMU data. If provided, the method will load data from the file.
+- `in_data` (dict, optional): A dictionary containing IMU data. Keys should include 'acc', 'omega', and optionally 'mag'. If provided, the method will load data directly from the dictionary.
+
+**Raises**:
+- `ValueError`: If neither `in_file` nor `in_data` is provided.
+
+**Example Usage**:
+```python
+# Example of loading data from a file
+sensor = MyIMUSensor()
+sensor.get_data(in_file="imu_data.csv")
+
+# Example of loading data from a dictionary
+data = {
+    'acc': np.array([[0.0, 0.0, 9.81], [0.0, 0.0, 9.81]]),  # example acceleration data
+    'omega': np.array([[0.0, 0.0, 0.0], [0.1, 0.1, 0.1]]),  # example angular velocity data
+    'mag': np.array([[0.1, 0.2, 0.3], [0.1, 0.2, 0.3]])      # optional example magnetic field data
+}
+sensor.get_data(in_data=data)
+
+
+IMUDataProcessor
+========================
+
+The `IMUDataProcessor` class processes IMU (Inertial Measurement Unit) data, including accelerometer, gyroscope, and magnetometer data, to compute and visualize the movement trajectories of both feet (left and right).
+
+Methods
+-------
+
+### `__init__(self, interpolated_data, filter_type='analytical', verbosity=0)`
+Initializes the `IMUDataProcessor` class.
+
+- **Parameters:**
+  - `interpolated_data`: A dictionary containing the IMU data, including accelerometer, gyroscope, and magnetometer data.
+  - `filter_type`: The type of filter to use for processing the data (default is 'analytical').
+  - `verbosity`: Verbosity level (0 = no output, 1 = minimal output, 2 = detailed output) (default is 0).
+
+- **Purpose**: Initializes the class with the provided IMU data, filter type, and verbosity level. Optionally prints initialization details based on verbosity.
+
+---
+
+### `extract_data(self)`
+Extracts accelerometer, gyroscope, and magnetometer data for both the right and left foot sensors.
+
+- **Purpose**: This method processes the raw IMU data into the required format and creates `MyIMUSensor` instances for both feet using the extracted data. Optionally prints the progress based on verbosity.
+
+---
+
+### `calculate_position(self)`
+Calculates the position of both the right and left foot sensors.
+
+- **Purpose**: Calls the `calc_position()` method of both the right and left foot sensors to compute their respective positions based on the sensor data.
+
+---
+
+### `print_sensor_data(self)`
+Prints the sensor data for both the right and left foot, including acceleration, angular velocity, magnetic field, orientation (quaternion), position, and velocity.
+
+- **Purpose**: Displays the sensor data for both feet, including acceleration, angular velocity, magnetic field, sampling rate, orientation (quaternion), position, and velocity.
+
+---
+
+### `plot_trajectory_3d(self)`
+Plots the 3D position trajectory of both the right and left foot sensors.
+
+- **Purpose**: Generates a 3D plot showing the position trajectories of both feet using their calculated positions. Each foot is represented by a distinct color in the plot.
+
+---
+
+### `plot_trajectory_2d(self)`
+Plots the 2D position trajectory of both the right and left foot sensors.
+
+- **Purpose**: Generates a 2D plot showing the position trajectories of both feet using their calculated positions. Each foot is represented by a distinct color in the plot.
+
+---
+
+Usage Example
+-------------
+
+```python
+# Initialize the IMU data processor with interpolated data, filter type, and verbosity level
+imu_processor = IMUDataProcessor(interpolated_data=my_data, filter_type='analytical', verbosity=1)
+
+# Extract sensor data for both right and left foot
+imu_processor.extract_data()
+
+# Calculate position for both right and left foot
+imu_processor.calculate_position()
+
+# Print the sensor data for both feet
+imu_processor.print_sensor_data()
+
+# Plot the 3D trajectory of both feet
+imu_processor.plot_trajectory_3d()
+
+# Plot the 2D trajectory of both feet
+imu_processor.plot_trajectory_2d()
+
+
 Main Script for Gait and Trajectory Analysis
 ============================================
 
@@ -344,21 +466,23 @@ Functions
 The main function that orchestrates the workflow of loading, processing, and analyzing data.
 
 - **Returns**:
-  - `data_dict`: Dictionary containing the processed data after gait analysis and interpolation.
   - `interpolated_data`: Dictionary containing the interpolated data after balancing the left and right groups.
+  - `quaternions`: Dictionary containing the quaternions for both left and right sensors.
 
 - **Process**:
-  1. **Argument Parsing**: Handles command-line arguments for file path, filename, and verbosity level.
+  1. **Argument Parsing**: Handles command-line arguments for file path, filename, verbosity level, and filter type.
   2. **Data Loading**: Loads data from a pickle file using the `DataLoader` class.
   3. **Gait Analysis**: Performs preprocessing on the data using the `GaitAnalysis` class.
   4. **Data Interpolation**: Balances the left and right groups using the `Interpolator` class.
-  5. **Trajectory Analysis**: Computes and plots the trajectories based on the interpolated data using the `TrajectoryAnalyzer` class.
+  5. **Trajectory Analysis**: Computes the trajectories based on the interpolated data using the `TrajectoryAnalyzer` class.
   6. **Orientation Analysis**: Analyzes the heading and detects turns using the `OrientationAnalyzer` class based on magnetometer data.
+  7. **IMU Data Processing**: Processes the IMU sensor data using `IMUDataProcessor` and stores quaternions.
+  8. **Data Saving**: Saves the quaternions to a pickle file using `DataSaver`.
+  9. **Plotting**: Plots 3D and 2D trajectories using `IMUDataProcessor`.
 
 ---
 
 Usage Example
 -------------
-
 ```bash
-python script.py -p /path/to/data -f data_file.pkl -v 2
+python script.py -p /path/to/data -f data_file.pkl -v 2 -flt madgwick
