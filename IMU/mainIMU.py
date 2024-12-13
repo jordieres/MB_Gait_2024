@@ -1,9 +1,17 @@
 import argparse
+import numpy as np
 from load_pickle import DataLoader
 from gait_analysis import GaitAnalysis
 from Interpolator import Interpolator
 from TrajectoryAnalyzer import TrajectoryAnalyzer
 from OrientationAnalyzer import OrientationAnalyzer
+import matplotlib.pyplot as plt
+from MyIMUSensor import MyIMUSensor
+from imu_sensor_data_processing import IMUDataProcessor
+from create_pickle import DataSaver
+import os
+
+
 
 class VAction(argparse.Action):
     """
@@ -89,7 +97,14 @@ def main():
     parser.add_argument("-p", "--path", type=str, required=True, help="The directory where the pickle file is located.")
     parser.add_argument("-f", "--filename", type=str, required=True, help="The name of the pickle file.")
     parser.add_argument("-v", "--verbosity", type=int, choices=[0, 1, 2], default=0, help="Verbosity level (0 = no output, 1 = minimal output, 2 = detailed output)")
-
+    parser.add_argument(
+    "-flt", "--filter_type",
+    type=str,
+    choices=['analytical', 'kalman', 'madgwick', 'mahony', 'None'],
+    default='analytical',
+    help="Determines how the orientation gets calculated: "
+         "'analytical' (default), 'kalman', 'madgwick', 'mahony', or 'None' for no calculation."
+)
     # Parse arguments
     args = parser.parse_args()
 
@@ -115,7 +130,8 @@ def main():
     # Instantiate GaitAnalysis with data and verbosity level from arguments
     gait_analysis = GaitAnalysis(raw_data, verbosity=args.verbosity)
 
-    data_dict = gait_analysis.preprocess_data()
+    gait_analysis.preprocess_data()
+    data_dict = gait_analysis.get_preprocessed_data()
     
     # Initialize Interpolator with data_dict and verbosity
     interpolator = Interpolator(data_dict, verbosity=args.verbosity)
@@ -129,7 +145,7 @@ def main():
     # Run trajectory analysis
     analyzer = TrajectoryAnalyzer(interpolated_data, dt=0.01, verbosity=args.verbosity)
     trajectories = analyzer.compute_trajectories()
-    analyzer.plot_trajectories(trajectories)
+    #analyzer.plot_trajectories(trajectories)
     
     # Extract magnetometer data
     mag_x = data_dict['magnetometer_data_right']['x']['_value'].to_numpy()
@@ -149,17 +165,42 @@ def main():
     turn_indices = orientation_analyzer.detect_turns(heading)
     
     # Plot heading and detected turns
-    orientation_analyzer.plot_heading(heading, turn_indices)
+    #orientation_analyzer.plot_heading(heading, turn_indices)
     
-    return data_dict, interpolated_data
+    
+    # Create an instance of IMUDataProcessor
+    processor = IMUDataProcessor(interpolated_data, filter_type=args.filter_type, verbosity=args.verbosity)
+    
+    # Extract and process data
+    processor.extract_data()
+    processor.calculate_position()
+    
+    # Store quaternions
+    processor.right_sensor.set_qtype(args.filter_type)
+    processor.right_sensor.set_qtype(args.filter_type)
+    right_quaternions = processor.right_sensor.quat
+    left_quaternions = processor.left_sensor.quat
+    quaternions = {'right': right_quaternions, 'left': left_quaternions}
+    
+    # Save quaternions using DataSaver
+    output_filename = f"{os.path.splitext(args.filename)[0]}_{args.filter_type}_quaternions.pkl"
+    data_saver = DataSaver(output_dir=args.path, filename=output_filename, verbosity=args.verbosity)
+    data_saver.save_to_pickle(quaternions)
+    
+    
+    # Print sensor data
+    #processor.print_sensor_data()
+    
+    # Plot 3D and 2D trajectories
+    processor.plot_trajectory_3d()
+    processor.plot_trajectory_2d()
+
+
+
+    
+   
+    return interpolated_data, quaternions
 
 if __name__ == "__main__":
-    data_dict, interpolated_data = main()
-
-
-
-
-
-
-if __name__ == "__main__":
-    data_dict=main()
+    
+    interpolated_data, quaternons = main()
