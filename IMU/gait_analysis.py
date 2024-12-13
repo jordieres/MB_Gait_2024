@@ -24,6 +24,7 @@ class GaitAnalysis:
         """
         self.data = data
         self.verbosity = verbosity
+        self.preprocessed_data = None
 
     def preprocess_data(self):
         """
@@ -119,8 +120,11 @@ class GaitAnalysis:
         data_dict['pressure_toe_2_left'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
         data_dict['pressure_toe_2_left'] = data_dict['pressure_toe_2_left'].reset_index(drop=True)
         # Now, sort all the DataFrames in the dictionary by the '_time' column (datetime) and reset the index
-        return data_dict
-    
+        self.preprocessed_data = data_dict
+     
+        
+    def get_preprocessed_data(self):
+       return self.preprocessed_data
     
     def plot_data(self, data_dict):
         # Get the all values for Left and Right Foot Heel Pressure (S0)
