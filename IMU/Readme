@@ -1,10 +1,9 @@
+```markdown
 # IMU Data Processing and Analysis
 
 ## Introduction
 
 The IMU Data Processing and Analysis program is a Python-based tool designed to load and process motion data, perform gait analysis, and compute orientation and trajectory from inertial measurement unit (IMU) sensors. The program interacts with pickle files containing sensor data and applies a series of analysis steps, including data interpolation, trajectory computation, and orientation analysis using magnetometer data.
-
-
 
 ## Setup & Installation
 
@@ -91,4 +90,3 @@ The program will output the following data:
 
 This program provides a comprehensive set of features for analyzing IMU data, including the ability to calculate and visualize movement trajectories, analyze orientation using magnetometer data, and process sensor data with advanced filtering techniques. It is highly customizable with different verbosity levels and filter options, allowing for flexible usage across various use cases.
 ```
-
