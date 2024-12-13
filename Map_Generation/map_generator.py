@@ -9,6 +9,8 @@ Created on Mon Sep 30 20:06:07 2024
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
+import pandas as pd
+import re
 
 class MapGenerator:
     """
@@ -95,7 +97,7 @@ class MapGenerator:
         for movement_id in unique_ids:
             # Filter data for the current movement_id
             group_df = self.movements_df[self.movements_df['movement_id'] == movement_id]
-    
+            group_df['local_time'] = pd.to_datetime(group_df['local_time'], errors='coerce')
             text_labels = [
                 f"Point {i}: {local_time}, Timezone: {local_timezone}"
                 for i, (local_time, local_timezone)
@@ -216,7 +218,15 @@ class MapGenerator:
         fig.update_traces(marker=dict(size=5, opacity=0.5), selector=dict(mode='markers'))
     
         # Construct the file name using qtok, start_date, and end_date
-        file_name = f"map_{qtok}_{start_date}_{end_date}.html"
+        sanitized_start = re.sub(r'[:]', '-', start_date)
+        sanitized_end = re.sub(r'[:]', '-', end_date)
+        file_name = f"map_{qtok}_{sanitized_start}_{sanitized_end}.html"
+      
+    
+        # Save the Plotly map to an HTML file
+        fig.write_html(file_name, config={"scrollZoom": True})
+        self._print(f"Map saved to {file_name}.", level=1)
+
     
         # Save the Plotly map to an HTML file
         fig.write_html(file_name, config={"scrollZoom": True})
