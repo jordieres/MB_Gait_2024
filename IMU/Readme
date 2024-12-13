@@ -91,6 +91,5 @@ The program will output the following data:
 ### Comments
 
 This program provides a comprehensive set of features for analyzing IMU data, including the ability to calculate and visualize movement trajectories, analyze orientation using magnetometer data, and process sensor data with advanced filtering techniques. It is highly customizable with different verbosity levels and filter options, allowing for flexible usage across various use cases.
-
 ```
 
