@@ -10,6 +10,7 @@ from config import Config
 from data_fetcher import DataFetcher
 from data_processor import DataProcessor
 from map_generator import MapGenerator
+from datetime import datetime
 
 
 
@@ -97,8 +98,8 @@ def main():
 
     # Parse command-line arguments
     ap = argparse.ArgumentParser()
-    ap.add_argument("-f", "--from", type=str, required=True, help="Date for starting the analysis. Format YYYY-MM-DD.")
-    ap.add_argument("-u", "--until", type=str, required=True, help="Date for ending the analysis. Format YYYY-MM-DD.")
+    ap.add_argument("-f", "--from", type=str, required=True, help="Start date/time (format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).")
+    ap.add_argument("-u", "--until", type=str, required=True, help="End date/time (format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).")
     ap.add_argument("-v", "--verbose", nargs='?', action=VAction, dest='verbose', help="Option for methods verbosity.")
     ap.add_argument("-q", "--qtok", type=str, required=True, help="Enter the qtok value (e.g., 'MGM-202406-79').")
     ap.add_argument("-p", "--pie", type=str, choices=["Right", "Left"], required=True, help="Enter the foot ('Right' or 'Left').")
@@ -113,13 +114,21 @@ def main():
 
     if verbosity_level > 1:
         print(f"Loaded configuration: {config}\n")
-
+    def parse_datetime(date_str, default_time):
+        try:
+            return datetime.fromisoformat(date_str).isoformat() + "Z"
+        except ValueError:
+            return f"{date_str}T{default_time}Z"
+        
+    start_date = parse_datetime(args['from'], "00:00:00")
+    end_date = parse_datetime(args['until'], "23:59:59")
+    
     # Create DataFetcher and fetch the data
     data_fetcher = DataFetcher(
         qtok=args['qtok'],
         pie=args['pie'],
-        start_date=f"{args['from']}T00:00:00Z",
-        end_date=f"{args['until']}T23:59:59Z",
+        start_date=start_date,
+        end_date=end_date,
         token=config.token,
         org=config.org,
         url=config.url,
@@ -144,3 +153,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
