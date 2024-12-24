@@ -440,6 +440,58 @@ imu_processor.plot_trajectory_3d()
 imu_processor.plot_trajectory_2d()
 
 
+DataPickle Class
+================
+
+The `DataPickle` class is a unified interface for loading and saving data, such as DataFrames or dictionaries, using pickle files. It provides methods to handle file operations with configurable verbosity levels for feedback and debugging.
+
+Methods
+-------
+
+### __init__(self, verbosity=0, output_dir='data', filename='data.pkl')
+
+Initializes the `DataPickle` class with verbosity level, default output directory, and filename.
+
+Arguments:
+- **verbosity** (`int`): Verbosity level (0 = no output, 1 = minimal output, 2 = detailed output).
+- **output_dir** (`str`): The default directory for saving pickle files. Default is `'data'`.
+- **filename** (`str`): The default name for pickle files. Default is `'data.pkl'`.
+
+### save_to_pickle(self, data, file_path=None, filename=None)
+
+Saves the provided data (e.g., dictionary, DataFrame) to a pickle file.
+
+Arguments:
+- **data** (`any`): The data to save (e.g., dictionary, DataFrame).
+- **file_path** (`str`, optional): The directory where the file should be saved. If not specified, defaults to `output_dir`.
+- **filename** (`str`, optional): The name of the pickle file. If not specified, defaults to `filename` set during initialization.
+
+### load_from_pickle(self, file_path=None, filename=None)
+
+Loads data (e.g., dictionary, DataFrame) from a pickle file.
+
+Arguments:
+- **file_path** (`str`, optional): The directory where the pickle file is located. If not specified, defaults to `output_dir`.
+- **filename** (`str`, optional): The name of the pickle file. If not specified, defaults to `filename` set during initialization.
+
+Returns:
+- **any**: The loaded data (e.g., DataFrame, dictionary) if successful, or `None` if loading failed.
+
+Examples of Usage
+-----------------
+
+### Saving Data
+
+```python
+data = {'key1': [1, 2, 3], 'key2': [4, 5, 6]}
+
+# Initialize the DataPickle instance
+data_pickle = DataPickle(verbosity=1, output_dir='output_data', filename='example.pkl')
+
+# Save the data
+data_pickle.save_to_pickle(data)
+
+
 Main Script for Gait and Trajectory Analysis
 ============================================
 
@@ -470,7 +522,7 @@ The main function that orchestrates the workflow of loading, processing, and ana
   - `quaternions`: Dictionary containing the quaternions for both left and right sensors.
 
 - **Process**:
-  1. **Argument Parsing**: Handles command-line arguments for file path, filename, verbosity level, and filter type.
+  1. **Argument Parsing**: Handles command-line arguments for file path and filename, verbosity level, and filter type.
   2. **Data Loading**: Loads data from a pickle file using the `DataLoader` class.
   3. **Gait Analysis**: Performs preprocessing on the data using the `GaitAnalysis` class.
   4. **Data Interpolation**: Balances the left and right groups using the `Interpolator` class.
@@ -485,4 +537,4 @@ The main function that orchestrates the workflow of loading, processing, and ana
 Usage Example
 -------------
 ```bash
-python script.py -p /path/to/data -f data_file.pkl -v 2 -flt madgwick
+runfile('C:/Users/marbo/Documents/mainIMU.py', wdir='C:/Users/marbo/Documents', args='-fp output_data/cine_MGM-202406-79.pkl -v 2 -flt kalman')
