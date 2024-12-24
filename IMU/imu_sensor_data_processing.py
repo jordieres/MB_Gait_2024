@@ -8,6 +8,7 @@ Created on Fri Dec 13 17:03:53 2024
 import numpy as np
 import matplotlib.pyplot as plt
 from MyIMUSensor import MyIMUSensor
+import plotly.graph_objects as go
 
 class IMUDataProcessor:
     """
@@ -150,39 +151,63 @@ class IMUDataProcessor:
 
     def plot_trajectory_3d(self):
         """
-        Plots the 3D position trajectory of both the right and left foot sensors.
-
-        This method generates a 3D plot showing the trajectory of both foot positions
-        using their respective calculated positions.
+        Plots the 3D position trajectory of both the right and left foot sensors using Plotly.
         """
-        fig = plt.figure(figsize=(10, 8))
-        ax = fig.add_subplot(111, projection='3d')
-        for foot, sensor, color in zip(['Right', 'Left'], [self.right_sensor, self.left_sensor], ['b', 'r']):
+        fig = go.Figure()
+    
+        # Add traces for each foot
+        for foot, sensor, color in zip(['Right', 'Left'], [self.right_sensor, self.left_sensor], ['blue', 'red']):
             position = sensor.pos
             x, y, z = position[:, 0], position[:, 1], position[:, 2]
-            ax.plot(x, y, z, label=f"{foot} Foot Position Trajectory", color=color)
-        ax.set_title("3D Position Trajectory")
-        ax.set_xlabel("X (m)")
-        ax.set_ylabel("Y (m)")
-        ax.set_zlabel("Z (m)")
-        ax.legend()
-        plt.show()
+            fig.add_trace(go.Scatter3d(
+                x=x, y=y, z=z,
+                mode='lines',
+                name=f"{foot} Foot Position Trajectory",
+                line=dict(color=color)
+            ))
+    
+        # Customize layout
+        fig.update_layout(
+            title="3D Position Trajectory",
+            scene=dict(
+                xaxis_title="X (m)",
+                yaxis_title="Y (m)",
+                zaxis_title="Z (m)"
+            ),
+            template="plotly_white",
+            legend_title="Foot"
+        )
+    
+        # Show plot
+        fig.show()
 
     def plot_trajectory_2d(self):
         """
-        Plots the 2D position trajectory of both the right and left foot sensors.
-
-        This method generates a 2D plot showing the trajectory of both foot positions
-        using their respective calculated positions.
+        Plots the 2D position trajectory of both the right and left foot sensors using Plotly.
         """
-        fig = plt.figure(figsize=(10, 8))
-        ax = fig.add_subplot(111)
-        for foot, sensor, color in zip(['Right', 'Left'], [self.right_sensor, self.left_sensor], ['b', 'r']):
+        fig = go.Figure()
+    
+        # Add traces for each foot
+        for foot, sensor, color in zip(['Right', 'Left'], [self.right_sensor, self.left_sensor], ['blue', 'red']):
             position = sensor.pos
             x, y = position[:, 0], position[:, 1]
-            ax.plot(x, y, label=f"{foot} Foot Position Trajectory", color=color)
-        ax.set_title("2D Position Trajectory")
-        ax.set_xlabel("X (m)")
-        ax.set_ylabel("Y (m)")
-        ax.legend()
-        plt.show()
+            fig.add_trace(go.Scatter(
+                x=x, y=y,
+                mode='lines',
+                name=f"{foot} Foot Position Trajectory",
+                line=dict(color=color)
+            ))
+    
+        # Customize layout
+        fig.update_layout(
+            title="2D Position Trajectory",
+            xaxis_title="X (m)",
+            yaxis_title="Y (m)",
+            template="plotly_white",
+            legend_title="Foot",
+            xaxis=dict(scaleanchor="y"),  # This ensures the x and y axes have the same scale
+            yaxis=dict(constrain="range")  # Keeps the y-axis range in check if needed
+        )
+    
+        # Show plot
+        fig.show()
