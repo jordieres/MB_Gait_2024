@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.mplot3d import Axes3D
 from scipy import signal
+import plotly.graph_objects as go
+
 
 class GaitAnalysis:
     def __init__(self, data, verbosity=0):
@@ -25,7 +27,9 @@ class GaitAnalysis:
         self.data = data
         self.verbosity = verbosity
         self.preprocessed_data = None
-
+        # Automatically preprocess the data upon initialization
+        self.preprocess_data()
+        
     def preprocess_data(self):
         """
         Preprocess and separate data based on sensor types and foot placement (Right/Left).
@@ -38,256 +42,217 @@ class GaitAnalysis:
         """
         if self.verbosity > 0:
             print("Starting data preprocessing...")
-    
+        
         data_dict = {}
+        sensor_fields = {
+            "acc_data": ['Ax', 'Ay', 'Az'],
+            "gyro_data": ['Gx', 'Gy', 'Gz'],
+            "magnetometer_data": ['Mx', 'My', 'Mz']
+        }
+        
+        # Loop through sensor types (acceleration, gyroscope, magnetometer)
+        for sensor_type, fields in sensor_fields.items():
+            for foot in ['Right', 'Left']:
+                foot_key = f"{sensor_type}_{foot.lower()}"
+                data_dict[foot_key] = {}
+                for axis, field in zip(['x', 'y', 'z'], fields):
+                    filtered_data = self.data[(self.data['_field'] == field) & (self.data['Foot'] == foot)]
+                    data_dict[foot_key][axis] = filtered_data.sort_values(by='_time', ascending=True).reset_index(drop=True)
     
-        # Separate acceleration data for each foot
-        data_dict['acc_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-        }
-        data_dict['acc_data_right']['x']=data_dict['acc_data_right']['x'].reset_index(drop=True)
-        data_dict['acc_data_right']['y']=data_dict['acc_data_right']['y'].reset_index(drop=True)
-        data_dict['acc_data_right']['z']=data_dict['acc_data_right']['z'].reset_index(drop=True)
-        
-        data_dict['acc_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Ax') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'Ay') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Az') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-        }
-        data_dict['acc_data_left']['x']=data_dict['acc_data_left']['x'].reset_index(drop=True)
-        data_dict['acc_data_left']['y']=data_dict['acc_data_left']['y'].reset_index(drop=True)
-        data_dict['acc_data_left']['z']=data_dict['acc_data_left']['z'].reset_index(drop=True)  
-        
+        # Process pressure data
+        pressure_fields = ['S0', 'S1', 'S2']
+        pressure_labels = ['pressure_heel', 'pressure_toe_1', 'pressure_toe_2']
+        for label, field in zip(pressure_labels, pressure_fields):
+            for foot in ['Right', 'Left']:
+                foot_key = f"{label}_{foot.lower()}"
+                filtered_data = self.data[(self.data['_field'] == field) & (self.data['Foot'] == foot)]
+                data_dict[foot_key] = filtered_data.sort_values(by='_time', ascending=True).reset_index(drop=True)
     
-        # Separate gyroscope data for each foot
-        data_dict['gyro_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-        }
-        data_dict['gyro_data_right']['x']=data_dict['gyro_data_right']['x'].reset_index(drop=True)
-        data_dict['gyro_data_right']['y']=data_dict['gyro_data_right']['y'].reset_index(drop=True)
-        data_dict['gyro_data_right']['z']=data_dict['gyro_data_right']['z'].reset_index(drop=True)
-        
-        data_dict['gyro_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Gx') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'Gy') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Gz') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-        }
-        
-        data_dict['gyro_data_left']['x']=data_dict['gyro_data_left']['x'].reset_index(drop=True)
-        data_dict['gyro_data_left']['y']=data_dict['gyro_data_left']['y'].reset_index(drop=True)
-        data_dict['gyro_data_left']['z']=data_dict['gyro_data_left']['z'].reset_index(drop=True)
-    
-        # Separate magnetometer data for each foot
-        data_dict['magnetometer_data_right'] = {
-            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True),
-        }
-        
-        data_dict['magnetometer_data_right']['x']=data_dict['magnetometer_data_right']['x'].reset_index(drop=True)
-        data_dict['magnetometer_data_right']['y']=data_dict['magnetometer_data_right']['y'].reset_index(drop=True)
-        data_dict['magnetometer_data_right']['z']=data_dict['magnetometer_data_right']['z'].reset_index(drop=True)
-        
-        
-        data_dict['magnetometer_data_left'] = {
-            'x': self.data[(self.data['_field'] == 'Mx') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'y': self.data[(self.data['_field'] == 'My') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-            'z': self.data[(self.data['_field'] == 'Mz') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True),
-        }
-        data_dict['magnetometer_data_left']['x']=data_dict['magnetometer_data_left']['x'].reset_index(drop=True)
-        data_dict['magnetometer_data_left']['y']=data_dict['magnetometer_data_left']['y'].reset_index(drop=True)
-        data_dict['magnetometer_data_left']['z']=data_dict['magnetometer_data_left']['z'].reset_index(drop=True)
-        
-        # Separate pressure data for each foot
-        data_dict['pressure_heel_right'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_heel_right'] = data_dict['pressure_heel_right'].reset_index(drop=True)
-        data_dict['pressure_heel_left'] = self.data[(self.data['_field'] == 'S0') & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_heel_left'] = data_dict['pressure_heel_left'].reset_index(drop=True)
-    
-        data_dict['pressure_toe_1_right'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_toe_1_right'] = data_dict['pressure_toe_1_right'].reset_index(drop=True)
-        
-        data_dict['pressure_toe_1_left'] = self.data[(self.data['_field'].isin(['S1'])) & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_toe_1_left'] = data_dict['pressure_toe_1_left'].reset_index(drop=True)
-        
-        data_dict['pressure_toe_2_right'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Right')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_toe_2_right'] = data_dict['pressure_toe_2_right'].reset_index(drop=True)
-        
-        data_dict['pressure_toe_2_left'] = self.data[(self.data['_field'].isin(['S2'])) & (self.data['Foot'] == 'Left')].sort_values(by='_time', ascending=True)
-        data_dict['pressure_toe_2_left'] = data_dict['pressure_toe_2_left'].reset_index(drop=True)
-        # Now, sort all the DataFrames in the dictionary by the '_time' column (datetime) and reset the index
+        # Assign the preprocessed data to the class attribute
         self.preprocessed_data = data_dict
-     
+         
         
     def get_preprocessed_data(self):
        return self.preprocessed_data
     
     def plot_data(self, data_dict):
-        # Get the all values for Left and Right Foot Heel Pressure (S0)
-        pressure_heel_left = data_dict['pressure_heel_left']
-        pressure_heel_right = data_dict['pressure_heel_right']
-        
-        # Plotting the last 250 values for both left and right foot
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.suptitle('Heel Pressure (S0) - Left and Right Foot', fontsize=16)
-        
-        # Plot Left Foot Heel Pressure S0 values over time
-        ax.plot(pressure_heel_left['_time'], pressure_heel_left['_value'], label='Left Foot Heel Pressure S0', color='purple')
-        
-        # Plot Right Foot Heel Pressure S0 values over time
-        ax.plot(pressure_heel_right['_time'], (pressure_heel_right['_value']), label='Right Foot Heel Pressure S0', color='green')
-        
-        # Customize plot
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Heel Pressure (S0)')
-        ax.legend(loc='upper right')
-        ax.grid(True)
-        
-        plt.show()
-        
-
-        
-        pressure_heel_left_closer = data_dict['pressure_heel_left'][4100:4900]
-        pressure_heel_right_closer = data_dict['pressure_heel_right'][250:1750]
-        
-        # Plotting the last 250 values for both left and right foot
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.suptitle('Heel Pressure (S0) - A closer look', fontsize=16)
-        
-        # Plot Left Foot Heel Pressure S0 values over time
-        ax.plot(pressure_heel_left_closer['_time'], pressure_heel_left_closer['_value'], label='Left Foot Heel Pressure S0', color='purple')
-        
-        # Plot Right Foot Heel Pressure S0 values over time
-        ax.plot(pressure_heel_right_closer['_time'], (pressure_heel_right_closer['_value']), label='Right Foot Heel Pressure S0', color='green')
-        
-        # Customize plot
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Heel Pressure (S0)')
-        ax.legend(loc='upper right')
-        ax.grid(True)
-        
-        plt.show()
-            
-       
-        
-        
-        
-       
-
-        # Get the first all values for Right Foot Heel Pressure (S0) and toe pressure (S1)
-        
-        pressure_heel_right = data_dict['pressure_heel_right']
-        pressure_toe_right = data_dict['pressure_toe_1_right']
-        
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.suptitle('Heel Pressure (S0) and tow pressure (S1) for right foot', fontsize=16)
-        
-        # Plot Left Foot Heel Pressure S0 values over time
-        ax.plot( pressure_heel_right['_time'],pressure_heel_right['_value'], label='Right Foot Heel Pressure S0', color='purple')
-        
-        # Plot Right Foot Heel Pressure S0 values over time
-        ax.plot(pressure_toe_right['_time'], (pressure_toe_right['_value']), label='Right Foot Toe Pressure S1', color='green')
-        
-        # Customize plot
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Heel and Toe Pressure (S0 and S1)')
-        ax.legend(loc='upper right')
-        ax.grid(True)
-        
-        plt.show()
-        
-        # Get the first 500 values for Right Foot Heel Pressure (S0) and toe pressure (S1)
-        
-        pressure_heel_right_first_500 = data_dict['pressure_heel_right'].head(500)
-        pressure_toe_right_first_500 = data_dict['pressure_toe_1_right'].head(500)
-        
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.suptitle('Heel Pressure (S0) and tow pressure (S1) for right foot first 500', fontsize=16)
-        
-        # Plot Left Foot Heel Pressure S0 values over time
-        ax.plot( pressure_heel_right_first_500['_time'],pressure_heel_right_first_500['_value'], label='Right Foot Heel Pressure S0', color='purple')
-        
-        # Plot Right Foot Heel Pressure S0 values over time
-        ax.plot(pressure_toe_right_first_500['_time'], (pressure_toe_right_first_500['_value']), label='Right Foot Toe Pressure S1', color='green')
-        
-        # Customize plot
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Heel and Toe Pressure (S0 and S1) first 500')
-        ax.legend(loc='upper right')
-        ax.grid(True)
-        
-        plt.show()
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.suptitle('Heel Pressure (S0) and tow pressure (S1) for right foot first 50', fontsize=16)
-        
-        # Plot Left Foot Heel Pressure S0 values over time
-        ax.plot( pressure_heel_right_first_500['_time'][:100],pressure_heel_right_first_500['_value'][:100]-281, label='Right Foot Heel Pressure S0', color='purple')
-        
-        # Plot Right Foot Heel Pressure S0 values over time
-        ax.plot(pressure_toe_right_first_500['_time'][:100], (pressure_toe_right_first_500['_value'][:100]), label='Right Foot Toe Pressure S1', color='green')
-        
-        # Customize plot
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Heel and Toe Pressure (S0 and S1) first 50')
-        ax.legend(loc='upper right')
-        ax.grid(True)
-                # Increase the number of x-axis ticks for better granularity
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=10, maxticks=20))  # Adjust the number of ticks
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))  # Format to hours, minutes, and seconds
-        
-        plt.xticks(rotation=45)  # Rotate labels for better readability
-        plt.tight_layout()
-        plt.show()
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(data_dict['acc_data_left']['x']['_time'][:500], data_dict['acc_data_left']['x']['_value'][:500], label='Acceleration X', color='r')
-        ax.plot(data_dict['acc_data_left']['y']['_time'][:500], data_dict['acc_data_left']['y']['_value'][:500], label='Acceleration Y', color='g')
-        ax.plot(data_dict['acc_data_left']['z']['_time'][:500], data_dict['acc_data_left']['z']['_value'][:500], label='Acceleration Z', color='b')
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Acceleration')
-        plt.title("Acceleration Over Time in X, Y, Z")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(data_dict['gyro_data_left']['x']['_time'][:500], data_dict['gyro_data_left']['x']['_value'][:500], label='Gyroscope values X', color='r')
-        ax.plot(data_dict['gyro_data_left']['y']['_time'][:500], data_dict['gyro_data_left']['y']['_value'][:500], label='Gyroscope values Y', color='g')
-        ax.plot(data_dict['gyro_data_left']['z']['_time'][:500], data_dict['gyro_data_left']['z']['_value'][:500], label='Gyroscope values Z', color='b')
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Gyroscope values')
-        plt.title("Gyroscope values")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-        # Example values for magnetometer data
-        mag_x = data_dict['magnetometer_data_left']['x']['_value'][:7000]
-        mag_y = data_dict['magnetometer_data_left']['y']['_value'][:7000]
-        mag_z = data_dict['magnetometer_data_left']['z']['_value'][:7000]
-        
-        # Calculate the heading (yaw angle) in radians and then convert to degrees
-        heading = np.arctan2(mag_y, mag_x)  # Compute the heading
-        heading_degrees = np.degrees(heading)  # Convert to degrees for easier interpretation
-        
-        time_values = data_dict['magnetometer_data_left']['x']['_time'][:7000]  # Assuming you have time data
-        plt.figure(figsize=(12, 6))
-        plt.plot(time_values, mag_x, label='Magnetometer X')
-        plt.plot(time_values, mag_y, label='Magnetometer Y')
-        plt.plot(time_values, mag_z, label='Magnetometer Z')
-        plt.xlabel('Time')
-        plt.ylabel('Magnetic Field Strength (µT)')
-        plt.title('Magnetometer Data for Left Foot')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        # Plot 1: Heel Pressure (S0) - Left and Right Foot
+        fig1 = go.Figure()
+        fig1.add_trace(go.Scatter(
+            x=data_dict['pressure_heel_left']['_time'], 
+            y=data_dict['pressure_heel_left']['_value'], 
+            mode='lines', 
+            name='Left Foot Heel Pressure S0', 
+            line=dict(color='purple')
+        ))
+        fig1.add_trace(go.Scatter(
+            x=data_dict['pressure_heel_right']['_time'], 
+            y=data_dict['pressure_heel_right']['_value'], 
+            mode='lines', 
+            name='Right Foot Heel Pressure S0', 
+            line=dict(color='green')
+        ))
+        fig1.update_layout(
+            title='Heel Pressure (S0) - Left and Right Foot',
+            xaxis_title='Time',
+            yaxis_title='Heel Pressure (S0)',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig1.show()
+    
+        # Plot 2: A closer look at Heel Pressure (S0)
+        fig2 = go.Figure()
+        pressure_heel_left_closer = data_dict['pressure_heel_left']
+        pressure_heel_right_closer = data_dict['pressure_heel_right']
+        fig2.add_trace(go.Scatter(
+            x=pressure_heel_left_closer['_time'], 
+            y=pressure_heel_left_closer['_value'], 
+            mode='lines', 
+            name='Left Foot Heel Pressure S0', 
+            line=dict(color='purple')
+        ))
+        fig2.add_trace(go.Scatter(
+            x=pressure_heel_right_closer['_time'], 
+            y=pressure_heel_right_closer['_value'], 
+            mode='lines', 
+            name='Right Foot Heel Pressure S0', 
+            line=dict(color='green')
+        ))
+        fig2.update_layout(
+            title='Heel Pressure (S0) - A closer look',
+            xaxis_title='Time',
+            yaxis_title='Heel Pressure (S0)',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig2.show()
+    
+        # Plot 3: Heel and Toe Pressure (S0 and S1) for Right Foot
+        fig3 = go.Figure()
+        fig3.add_trace(go.Scatter(
+            x=data_dict['pressure_heel_right']['_time'], 
+            y=data_dict['pressure_heel_right']['_value'], 
+            mode='lines', 
+            name='Right Foot Heel Pressure S0', 
+            line=dict(color='purple')
+        ))
+        fig3.add_trace(go.Scatter(
+            x=data_dict['pressure_toe_1_right']['_time'], 
+            y=data_dict['pressure_toe_1_right']['_value'], 
+            mode='lines', 
+            name='Right Foot Toe Pressure S1', 
+            line=dict(color='green')
+        ))
+        fig3.update_layout(
+            title='Heel Pressure (S0) and Toe Pressure (S1) for Right Foot',
+            xaxis_title='Time',
+            yaxis_title='Heel and Toe Pressure (S0 and S1)',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig3.show()
+    
+        # Plot 4: Acceleration Data for Left Foot
+        fig4 = go.Figure()
+        fig4.add_trace(go.Scatter(
+            x=data_dict['acc_data_left']['x']['_time'], 
+            y=data_dict['acc_data_left']['x']['_value'], 
+            mode='lines', 
+            name='Acceleration X', 
+            line=dict(color='red')
+        ))
+        fig4.add_trace(go.Scatter(
+            x=data_dict['acc_data_left']['y']['_time'], 
+            y=data_dict['acc_data_left']['y']['_value'], 
+            mode='lines', 
+            name='Acceleration Y', 
+            line=dict(color='green')
+        ))
+        fig4.add_trace(go.Scatter(
+            x=data_dict['acc_data_left']['z']['_time'], 
+            y=data_dict['acc_data_left']['z']['_value'], 
+            mode='lines', 
+            name='Acceleration Z', 
+            line=dict(color='blue')
+        ))
+        fig4.update_layout(
+            title='Acceleration Over Time in X, Y, Z',
+            xaxis_title='Time',
+            yaxis_title='Acceleration',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig4.show()
+    
+        # Plot 5: Gyroscope Data for Left Foot
+        fig5 = go.Figure()
+        fig5.add_trace(go.Scatter(
+            x=data_dict['gyro_data_left']['x']['_time'], 
+            y=data_dict['gyro_data_left']['x']['_value'], 
+            mode='lines', 
+            name='Gyroscope X', 
+            line=dict(color='red')
+        ))
+        fig5.add_trace(go.Scatter(
+            x=data_dict['gyro_data_left']['y']['_time'], 
+            y=data_dict['gyro_data_left']['y']['_value'], 
+            mode='lines', 
+            name='Gyroscope Y', 
+            line=dict(color='green')
+        ))
+        fig5.add_trace(go.Scatter(
+            x=data_dict['gyro_data_left']['z']['_time'], 
+            y=data_dict['gyro_data_left']['z']['_value'], 
+            mode='lines', 
+            name='Gyroscope Z', 
+            line=dict(color='blue')
+        ))
+        fig5.update_layout(
+            title='Gyroscope Values',
+            xaxis_title='Time',
+            yaxis_title='Gyroscope',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig5.show()
+    
+        # Plot 6: Magnetometer Data and Heading
+        fig6 = go.Figure()
+        mag_x = data_dict['magnetometer_data_left']['x']['_value']
+        mag_y = data_dict['magnetometer_data_left']['y']['_value']
+        mag_z = data_dict['magnetometer_data_left']['z']['_value']
+        time_values = data_dict['magnetometer_data_left']['x']['_time']
+    
+        fig6.add_trace(go.Scatter(
+            x=time_values, 
+            y=mag_x, 
+            mode='lines', 
+            name='Magnetometer X', 
+            line=dict(color='red')
+        ))
+        fig6.add_trace(go.Scatter(
+            x=time_values, 
+            y=mag_y, 
+            mode='lines', 
+            name='Magnetometer Y', 
+            line=dict(color='green')
+        ))
+        fig6.add_trace(go.Scatter(
+            x=time_values, 
+            y=mag_z, 
+            mode='lines', 
+            name='Magnetometer Z', 
+            line=dict(color='blue')
+        ))
+        fig6.update_layout(
+            title='Magnetometer Data for Left Foot',
+            xaxis_title='Time',
+            yaxis_title='Magnetic Field Strength (µT)',
+            legend=dict(x=0.8, y=1),
+            template='plotly_white'
+        )
+        fig6.show()
         
         
         
