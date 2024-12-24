@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from scipy.ndimage import gaussian_filter1d
 
 class OrientationAnalyzer:
@@ -67,7 +68,7 @@ class OrientationAnalyzer:
             print(f"Smoothing data with window size {window_size}.")
 
         # Ensure outliers are removed before smoothing
-        self.clean_data()
+        #self.clean_data()
 
         # Ensure the lengths of the data are the same after removing outliers
         min_length = min(len(self.mag_x), len(self.mag_y), len(self.mag_z))
@@ -128,27 +129,48 @@ class OrientationAnalyzer:
 
     def plot_heading(self, heading, turn_indices=None):
         """
-        Plot the heading over time, highlighting turns if provided.
+        Plot the heading over time, highlighting turns if provided, using Plotly.
+
         :param heading: Heading angles in radians.
         :param turn_indices: Indices where turns occur.
         """
         if self.verbosity >= 1:
-            print("Plotting heading with detected turns.")
+            print("Plotting heading with detected turns using Plotly.")
 
         time = np.arange(len(heading))  # Assume constant sampling interval
+        heading_degrees = np.degrees(heading)
 
-        plt.figure(figsize=(10, 5))  # Ensure we call plt.figure correctly
-        plt.plot(time, np.degrees(heading), label="Heading (degrees)")
+        # Create the base line plot for heading
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=time,
+            y=heading_degrees,
+            mode='lines',
+            name='Heading (degrees)',
+            line=dict(color='blue')
+        ))
+
+        # Add scatter plot for turn indices if provided
         if turn_indices is not None:
-            plt.scatter(turn_indices, np.degrees(heading[turn_indices]), color='red', label="Detected Turns")
+            fig.add_trace(go.Scatter(
+                x=turn_indices,
+                y=heading_degrees[turn_indices],
+                mode='markers',
+                name='Detected Turns',
+                marker=dict(color='red', size=8, symbol='circle')
+            ))
 
-        plt.title("Heading and Turns")
-        plt.xlabel("Time")
-        plt.ylabel("Heading (degrees)")
-        plt.legend()
-        plt.grid()
+        # Update layout for the plot
+        fig.update_layout(
+            title="Heading and Turns",
+            xaxis=dict(title="Time"),
+            yaxis=dict(title="Heading (degrees)"),
+            legend=dict(title="Legend"),
+            template="plotly_white"
+        )
 
         if self.verbosity >= 1:
-            print("Displaying plot.")
+            print("Displaying interactive plot.")
 
-        plt.show()
+        fig.show()
