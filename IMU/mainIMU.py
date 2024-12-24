@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-from load_pickle import DataLoader
 from gait_analysis import GaitAnalysis
 from Interpolator import Interpolator
 from TrajectoryAnalyzer import TrajectoryAnalyzer
@@ -8,9 +7,10 @@ from OrientationAnalyzer import OrientationAnalyzer
 import matplotlib.pyplot as plt
 from MyIMUSensor import MyIMUSensor
 from imu_sensor_data_processing import IMUDataProcessor
-from create_pickle import DataSaver
+from pathlib import Path
 import os
-
+from DataPickle import DataPickle
+import plotly.io as pio
 
 
 class VAction(argparse.Action):
@@ -94,8 +94,7 @@ def main():
     """
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Load a DataFrame from a pickle file.")
-    parser.add_argument("-p", "--path", type=str, required=True, help="The directory where the pickle file is located.")
-    parser.add_argument("-f", "--filename", type=str, required=True, help="The name of the pickle file.")
+    parser.add_argument("-fp", "--file_path", type=str, required=True, help="The full path to the pickle file (including the filename).")
     parser.add_argument("-v", "--verbosity", type=int, choices=[0, 1, 2], default=0, help="Verbosity level (0 = no output, 1 = minimal output, 2 = detailed output)")
     parser.add_argument(
     "-flt", "--filter_type",
@@ -107,12 +106,22 @@ def main():
 )
     # Parse arguments
     args = parser.parse_args()
-
-    # Initialize DataLoader with verbosity
-    loader = DataLoader(verbosity=args.verbosity)
     
+    # Extract path and filename using pathlib
+    file_path = Path(args.file_path).resolve()
+    directory = file_path.parent
+    filename = file_path.name
+
+    if args.verbosity > 0:
+        print(f"Resolved file path: {file_path}")
+        print(f"Directory: {directory}")
+        print(f"Filename: {filename}")
+        
+    # Initialize DataPickle with verbosity and output directory
+    data_handler = DataPickle(output_dir=str(directory), verbosity=args.verbosity)
+
     # Load DataFrame from pickle
-    raw_data = loader.load_from_pickle(file_path=args.path, filename=args.filename)
+    raw_data = data_handler.load_from_pickle(filename=filename)
     if args.verbosity > 0:
         print("DataFrame successfully loaded from pickle.")
         
@@ -130,9 +139,10 @@ def main():
     # Instantiate GaitAnalysis with data and verbosity level from arguments
     gait_analysis = GaitAnalysis(raw_data, verbosity=args.verbosity)
 
-    gait_analysis.preprocess_data()
+    #gait_analysis.preprocess_data()
     data_dict = gait_analysis.get_preprocessed_data()
-    
+    pio.renderers.default = 'browser'
+    gait_analysis.plot_data(data_dict)
     # Initialize Interpolator with data_dict and verbosity
     interpolator = Interpolator(data_dict, verbosity=args.verbosity)
     
@@ -145,7 +155,7 @@ def main():
     # Run trajectory analysis
     analyzer = TrajectoryAnalyzer(interpolated_data, dt=0.01, verbosity=args.verbosity)
     trajectories = analyzer.compute_trajectories()
-    #analyzer.plot_trajectories(trajectories)
+    analyzer.plot_trajectories(trajectories)
     
     # Extract magnetometer data
     mag_x = data_dict['magnetometer_data_right']['x']['_value'].to_numpy()
@@ -165,7 +175,7 @@ def main():
     turn_indices = orientation_analyzer.detect_turns(heading)
     
     # Plot heading and detected turns
-    #orientation_analyzer.plot_heading(heading, turn_indices)
+    orientation_analyzer.plot_heading(heading, turn_indices)
     
     
     # Create an instance of IMUDataProcessor
@@ -183,9 +193,11 @@ def main():
     quaternions = {'right': right_quaternions, 'left': left_quaternions}
     
     # Save quaternions using DataSaver
-    output_filename = f"{os.path.splitext(args.filename)[0]}_{args.filter_type}_quaternions.pkl"
-    data_saver = DataSaver(output_dir=args.path, filename=output_filename, verbosity=args.verbosity)
-    data_saver.save_to_pickle(quaternions)
+    input_path = Path(args.file_path)  # Updated from args.path and args.filename
+    base_name = input_path.stem  # Filename without the extension
+    directory = input_path.parent  # Parent directory of the file
+    output_filename = f"{base_name}_{args.filter_type}_quaternions.pkl"
+    data_handler.save_to_pickle(data=quaternions, filename=output_filename)
     
     
     # Print sensor data
