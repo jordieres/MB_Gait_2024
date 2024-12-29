@@ -93,13 +93,13 @@ def main():
     """
     
 
-    # Load config
-    config = Config()
+
 
     # Parse command-line arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-f", "--from", type=str, required=True, help="Start date/time (format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).")
     ap.add_argument("-u", "--until", type=str, required=True, help="End date/time (format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).")
+    ap.add_argument("-c", "--config", type=str, required=True, help="Configuration File.")
     ap.add_argument("-v", "--verbose", nargs='?', action=VAction, dest='verbose', help="Option for methods verbosity.")
     ap.add_argument("-q", "--qtok", type=str, required=True, help="Enter the qtok value (e.g., 'MGM-202406-79').")
     ap.add_argument("-p", "--pie", type=str, choices=["Right", "Left"], required=True, help="Enter the foot ('Right' or 'Left').")
@@ -109,6 +109,9 @@ def main():
 
     verbosity_level = int(args['verbose']) if args['verbose'] else 0
 
+    # Load config
+    config = Config(args['config'])
+    
     if verbosity_level > 0:
         print(f"Starting data processing with verbosity level {verbosity_level}")
 
@@ -132,6 +135,8 @@ def main():
         token=config.token,
         org=config.org,
         url=config.url,
+        database=config.database,
+        retention=config.retention,
         verbose=verbosity_level
     )
 

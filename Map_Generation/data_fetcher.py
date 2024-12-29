@@ -30,7 +30,8 @@ class DataFetcher:
         fetch_data(): Fetches data from InfluxDB and returns a pandas DataFrame.
     """
     
-    def __init__(self, qtok, pie, start_date, end_date, token, org, url, verbose=0):
+    def __init__(self, qtok, pie, start_date, end_date, token, org, url, \
+                    database, retention, verbose=0) -> None:
         self.qtok = qtok
         self.pie = pie
         self.start_date = start_date
@@ -40,6 +41,9 @@ class DataFetcher:
         self.url = url
         self.client = InfluxDBClient(url=self.url, token=self.token, org=self.org)
         self.verbose = verbose
+        self.bucket = database+"/"+retention
+        self.database = database
+        self.retention = retention
         
     def build_query(self):
         """
@@ -48,15 +52,28 @@ class DataFetcher:
         Returns:
             str: The constructed query string.
         """
-        
+        metrics = ['Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz', 'Mx', 'My', 'Mz', 'S0', 'S1', 'S2', 'lat', 'lng']
+        metrics_str = ' or '.join([f'r._field == "{metric}"' for metric in metrics])
+        columns_str = ', '.join([f'"{metric}"' for metric in metrics])
+
         query = f'''
-            from(bucket:"Gait/autogen")
-            |> range(start: {self.start_date}, stop: {self.end_date})
-            |> filter(fn: (r) => r["_measurement"] == "Gait")
-            |> filter(fn: (r) => r["CodeID"] == "{self.qtok}" and r["type"] == "SCKS" and r["Foot"] == "{self.pie}")
-            |> filter(fn: (r) => r["_field"] == "S0")
-            |> yield()
-            '''
+        from(bucket: "{self.bucket}")
+        |> range(start: time(v: "{self.start_date}"), stop: time(v: "{self.end_date}"))
+        |> filter(fn: (r) => r._measurement == "{self.database}")
+        |> filter(fn: (r) => {metrics_str})
+        |> filter(fn: (r) => r["CodeID"] == "{self.qtok}" and r["type"] == "SCKS" and r["Foot"] == "{self.pie}")
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        |> keep(columns: ["_time", {columns_str}])
+        '''
+        
+        # query = f'''
+        #     from(bucket:"Gait/autogen")
+        #     |> range(start: {self.start_date}, stop: {self.end_date})
+        #     |> filter(fn: (r) => r["_measurement"] == "Gait")
+        #     |> filter(fn: (r) => r["CodeID"] == "{self.qtok}" and r["type"] == "SCKS" and r["Foot"] == "{self.pie}")
+        #     |> filter(fn: (r) => r["_field"] == "S0")
+        #     |> yield()
+        #     '''
         
         if self.verbose > 1:
             print(f"Constructed Query: {query}")

@@ -22,3 +22,11 @@ class Config:
     @property
     def url(self):
         return self.config['database']['url']
+    
+    @property
+    def database(self):
+        return self.config['database']['database']
+    
+    @property
+    def retention(self):
+        return self.config['database']['retention_policy']
