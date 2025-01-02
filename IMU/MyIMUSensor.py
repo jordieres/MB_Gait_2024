@@ -10,7 +10,7 @@ from skinematics.imus import IMU_Base
 
 
 class MyIMUSensor(IMU_Base):
-    def get_data(self, in_file=None, in_data=None):
+    def get_data(self, R_init, rate, in_file=None, in_data=None):
         """
         Retrieves IMU data from a file or dictionary and sets the relevant attributes.
         This method should be implemented according to the specific data format.
@@ -27,20 +27,25 @@ class MyIMUSensor(IMU_Base):
                 self.mag = data[:, 6:9]  # Optional: Next 3 columns for magnetic field
             else:
                 self.mag = np.zeros_like(self.acc)  # If mag data is not available, set to zero
-            self.rate = 50 
+            self.rate = rate
+            self.R_init=R_init
+            
         elif in_data:
             # If data is passed directly as a dictionary
 
             
-            self.rate = 50
+            self.rate = rate
             self.acc= in_data['acc']
             self.omega = in_data['omega']
             if 'mag' in in_data.keys():
                 self.mag = in_data['mag']
             self.source = None
             self._set_info()
-            
+            self.R_init=R_init
         else:
             raise ValueError("Must provide either in_file or in_data")
+            
+    
+        
             
     
