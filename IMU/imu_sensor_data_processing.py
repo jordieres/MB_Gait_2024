@@ -9,6 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from MyIMUSensor import MyIMUSensor
 import plotly.graph_objects as go
+from scipy.spatial.transform import Rotation as R
+from scipy.signal import butter, filtfilt
+
+
 
 class IMUDataProcessor:
     """
@@ -59,6 +63,38 @@ class IMUDataProcessor:
         self.left_sensor = None
         self.verbosity = verbosity
 
+
+    
+    def apply_low_pass_filter(self, data, cutoff=5, fs=50, order=4):
+        """
+        Applies a low-pass Butterworth filter to the input data.
+    
+        Parameters:
+        ----------
+        data : np.ndarray
+            The input data, where each column represents a signal (e.g., Ax, Ay, Az).
+        cutoff : float
+            The cutoff frequency of the low-pass filter.
+        fs : float
+            The sampling rate of the data (in Hz).
+        order : int
+            The order of the Butterworth filter.
+    
+        Returns:
+        -------
+        np.ndarray
+            The filtered data, with the same shape as the input.
+        """
+        b, a = butter(order, cutoff / (0.5 * fs), btype='low', analog=False)
+        
+        # Apply filter to each column independently
+        filtered_data = np.zeros_like(data)
+        for i in range(data.shape[1]):
+            filtered_data[:, i] = filtfilt(b, a, data[:, i])
+        
+        return filtered_data
+    
+    
     def extract_data(self):
         """
         Extracts accelerometer, gyroscope, and magnetometer data for both the right and left foot sensors.
@@ -66,29 +102,64 @@ class IMUDataProcessor:
         This method processes the raw IMU data into the required format and creates MyIMUSensor instances
         for both feet using the extracted data.
         """
+        R_init_right = np.array([[1.0, 0.0, 0.0],
+                         [0.0, 1.0, 0.0],
+                         [0.0, 0.0, 1.0]])  # z-axis points along the x-axis
+        
+        R_init_left = np.array([[1.0, 0.0, 0.0],
+                         [0.0, 1.0, 0.0],
+                         [0.0, 0.0, 1.0]])
+        #np.array([[1.0, 0.0, 0.0],
+        #                 [0.0, 1.0, 0.0],
+        #                 [0.0, 0.0, 1.0]])
+        #R_init_right = np.transpose(R_init_right)[::-1]
+        #theta = np.pi / 4  # 45 degrees in radians
+        #rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
+                            #[np.sin(theta),  np.cos(theta), 0],
+                            #[0,              0,             1]])
+
+        # Apply the rotation
+        #R_init_left = np.dot(rotation_matrix, R_init_left)
+        R_init_right = np.array([
+                            [0.0, 1.0, 0.0],  # x-axis points along the y-axis
+                            [0.0, 0.0, 1.0],  # y-axis points along the z-axis
+                            [1.0, 0.0, 0.0]])  # z-axis points along the x-axis
+        R_init_left = np.array([
+                            [0.0, 1.0, 0.0],  # x-axis points along the y-axis
+                            [0.0, 0.0, 1.0],  # y-axis points along the z-axis
+                            [1.0, 0.0, 0.0]])  # z-axis points along the x-axis
+        
+        
         if self.verbosity > 0:
             print("Extracting data for right foot sensor...")
         
         right_data = {
             'acc': np.column_stack((
-                np.array(self.interpolated_data['acc_data_right']['x']['_value']),
-                -np.array(self.interpolated_data['acc_data_right']['y']['_value']),
-                np.array(self.interpolated_data['acc_data_right']['z']['_value'])
+                np.array(self.interpolated_data['right']['Ax']),
+                np.array(self.interpolated_data['right']['Ay']),
+                np.array(self.interpolated_data['right']['Az'])
             )),
             'omega': np.column_stack((
-                np.array(self.interpolated_data['gyro_data_right']['x']['_value']),
-                np.array(self.interpolated_data['gyro_data_right']['y']['_value']),
-                np.array(self.interpolated_data['gyro_data_right']['z']['_value'])
+                np.array(self.interpolated_data['right']['Gx']),
+                np.array(self.interpolated_data['right']['Gy']),
+                np.array(self.interpolated_data['right']['Gz'])
             )),
             'mag': np.column_stack((
-                np.array(self.interpolated_data['magnetometer_data_right']['x']['_value']),
-                np.array(self.interpolated_data['magnetometer_data_right']['y']['_value']),
-                np.array(self.interpolated_data['magnetometer_data_right']['z']['_value'])
+                np.array(self.interpolated_data['right']['Mx']),
+                np.array(self.interpolated_data['right']['My']),
+                np.array(self.interpolated_data['right']['Mz'])
             ))
         }
-        self.right_sensor = MyIMUSensor(in_data=right_data)
-        self.right_sensor.get_data(in_data=right_data)
+        
+        #right_data['acc'] = self.apply_low_pass_filter(data=right_data['acc'], cutoff=5, fs=50, order=4)
+        #right_data['omega'] = self.apply_low_pass_filter(data=right_data['omega'], cutoff=5, fs=50, order=4)
+        #right_data['mag'] = self.apply_low_pass_filter(data=right_data['mag'], cutoff=5, fs=50, order=4)
 
+        self.right_sensor = MyIMUSensor(in_data=right_data)
+        self.right_sensor.get_data(R_init=R_init_right, rate=50, in_data=right_data)
+        
+       
+            
         if self.verbosity > 0:
             print("Right foot data extraction complete.")
 
@@ -97,27 +168,49 @@ class IMUDataProcessor:
         
         left_data = {
             'acc': np.column_stack((
-                np.array(self.interpolated_data['acc_data_left']['x']['_value']),
-                np.array(self.interpolated_data['acc_data_left']['y']['_value']),
-                np.array(self.interpolated_data['acc_data_left']['z']['_value'])
+                np.array(self.interpolated_data['left']['Ax']),
+                np.array(self.interpolated_data['left']['Ay']),
+                np.array(self.interpolated_data['left']['Az'])
             )),
             'omega': np.column_stack((
-                np.array(self.interpolated_data['gyro_data_left']['x']['_value']),
-                np.array(self.interpolated_data['gyro_data_left']['y']['_value']),
-                np.array(self.interpolated_data['gyro_data_left']['z']['_value'])
+                np.array(self.interpolated_data['left']['Gx']),
+                np.array(self.interpolated_data['left']['Gy']),
+                np.array(self.interpolated_data['left']['Gz'])
             )),
             'mag': np.column_stack((
-                np.array(self.interpolated_data['magnetometer_data_left']['x']['_value']),
-                np.array(self.interpolated_data['magnetometer_data_left']['y']['_value']),
-                np.array(self.interpolated_data['magnetometer_data_left']['z']['_value'])
+                np.array(self.interpolated_data['left']['Mx']*(-1)),
+                np.array(self.interpolated_data['left']['My']),
+                np.array(self.interpolated_data['left']['Mz']*(-1))
             ))
         }
+        
+        #left_data['acc'] = self.apply_low_pass_filter(data=left_data['acc'], cutoff=5, fs=50, order=4)
+        #left_data['omega'] = self.apply_low_pass_filter(data=left_data['omega'], cutoff=5, fs=50, order=4)
+        #left_data['mag'] = self.apply_low_pass_filter(data=left_data['mag'], cutoff=5, fs=50, order=4)
+        
         self.left_sensor = MyIMUSensor(in_data=left_data)
-        self.left_sensor.get_data(in_data=left_data)
-
+        self.left_sensor.get_data(R_init=R_init_left, rate=50, in_data=left_data)
+        if self.verbosity > 1:
+            print("Left Sensor R_init (before applying 90° rotation):")
+            print(self.left_sensor.R_init)
+            
         if self.verbosity > 0:
             print("Left foot data extraction complete.")
 
+        #if self.verbosity > 0:
+        #    print("Applying 90-degree rotation to the initial orientation of the left foot sensor.")
+        #rotation_matrix = R.from_euler('z', -90, degrees=True).as_matrix()  # -90 degrees rotation around Z-axis
+        #self.left_sensor.R_init = rotation_matrix @ self.left_sensor.R_init  # Update R_init
+        #if self.verbosity > 1:
+        #    print("Left Sensor R_init (after applying 90° rotation):")
+        #    print(self.left_sensor.R_init)
+        #if self.verbosity > 0:
+        #    print("Adjusted initial orientation of the left sensor.")
+        
+        
+    
+        
+        
     def calculate_position(self):
         """
         Calculates the position of both the right and left foot sensors.
@@ -208,6 +301,9 @@ class IMUDataProcessor:
             xaxis=dict(scaleanchor="y"),  # This ensures the x and y axes have the same scale
             yaxis=dict(constrain="range")  # Keeps the y-axis range in check if needed
         )
+    
+        # Show plot
+        fig.show()
     
         # Show plot
         fig.show()
