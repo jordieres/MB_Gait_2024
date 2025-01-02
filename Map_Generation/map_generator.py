@@ -11,6 +11,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
+import numpy as np
 
 class MapGenerator:
     """
@@ -85,7 +86,7 @@ class MapGenerator:
         max_speed = self.movements_df['speed_m_s'].max()
     
         norm_speed = (self.movements_df['speed_m_s'] - min_speed) / (max_speed - min_speed)
-        
+        norm_speed = np.nan_to_num(norm_speed, nan=0)
         # Use Plotly's color scale to generate colors for speeds
         cmap = px.colors.sample_colorscale('Turbo', norm_speed)
     
@@ -222,11 +223,6 @@ class MapGenerator:
         sanitized_end = re.sub(r'[:]', '-', end_date)
         file_name = f"map_{qtok}_{sanitized_start}_{sanitized_end}.html"
       
-    
-        # Save the Plotly map to an HTML file
-        fig.write_html(file_name, config={"scrollZoom": True})
-        self._print(f"Map saved to {file_name}.", level=1)
-
     
         # Save the Plotly map to an HTML file
         fig.write_html(file_name, config={"scrollZoom": True})
