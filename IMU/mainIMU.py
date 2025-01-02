@@ -11,6 +11,7 @@ from pathlib import Path
 import os
 from DataPickle import DataPickle
 import plotly.io as pio
+import pandas as pd
 
 
 class VAction(argparse.Action):
@@ -122,13 +123,17 @@ def main():
 
     # Load DataFrame from pickle
     raw_data = data_handler.load_from_pickle(filename=filename)
+    print(len(raw_data['left']['_time']))
+    print(len(raw_data['right']['_time']))
+    print(raw_data['right']['lat'].unique())
+    print(raw_data['right']['lng'].unique())
     if args.verbosity > 0:
         print("DataFrame successfully loaded from pickle.")
         
         # Print time range if 'time' column exists
-        if '_time' in raw_data.columns:
-            start_time = raw_data['_time'].iloc[0].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Keep two decimal places
-            end_time = raw_data['_time'].iloc[-1].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]    # Keep two decimal places
+        if '_time' in raw_data['left'].keys():
+            start_time = raw_data['left']['_time'].iloc[0].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Keep two decimal places
+            end_time = raw_data['left']['_time'].iloc[-1].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]    # Keep two decimal places
             print(f"Time range: {start_time} to {end_time}")
     
     if raw_data is not None:
@@ -139,28 +144,27 @@ def main():
     # Instantiate GaitAnalysis with data and verbosity level from arguments
     gait_analysis = GaitAnalysis(raw_data, verbosity=args.verbosity)
 
-    #gait_analysis.preprocess_data()
-    data_dict = gait_analysis.get_preprocessed_data()
+    
     pio.renderers.default = 'browser'
-    gait_analysis.plot_data(data_dict)
+    #gait_analysis.plot_data(raw_data)
     # Initialize Interpolator with data_dict and verbosity
-    interpolator = Interpolator(data_dict, verbosity=args.verbosity)
+    #interpolator = Interpolator(data_dict, verbosity=args.verbosity)
     
     # Interpolate data to balance the "left" and "right" groups
-    interpolator.interpolate_data()
+    #interpolator.interpolate_data()
 
     # Get the interpolated data
-    interpolated_data = interpolator.get_interpolated_data()
+    #interpolated_data = interpolator.get_interpolated_data()
     
     # Run trajectory analysis
-    analyzer = TrajectoryAnalyzer(interpolated_data, dt=0.01, verbosity=args.verbosity)
-    trajectories = analyzer.compute_trajectories()
-    analyzer.plot_trajectories(trajectories)
+    #analyzer = TrajectoryAnalyzer(raw_data, dt=0.01, verbosity=args.verbosity)
+    #trajectories = analyzer.compute_trajectories()
+    #analyzer.plot_trajectories(trajectories)
     
     # Extract magnetometer data
-    mag_x = data_dict['magnetometer_data_right']['x']['_value'].to_numpy()
-    mag_y = data_dict['magnetometer_data_right']['y']['_value'].to_numpy()
-    mag_z = data_dict['magnetometer_data_right']['z']['_value'].to_numpy()
+    mag_x = raw_data['right']['Mx'].to_numpy()
+    mag_y = raw_data['right']['My'].to_numpy()
+    mag_z = raw_data['right']['Mz'].to_numpy()
     
     # Initialize the orientation analyzer with the magnetometer data
     orientation_analyzer = OrientationAnalyzer(mag_x, mag_y, mag_z, verbosity=args.verbosity)
@@ -179,18 +183,23 @@ def main():
     
     
     # Create an instance of IMUDataProcessor
-    processor = IMUDataProcessor(interpolated_data, filter_type=args.filter_type, verbosity=args.verbosity)
+    processor = IMUDataProcessor(raw_data, filter_type=args.filter_type, verbosity=args.verbosity)
     
     # Extract and process data
     processor.extract_data()
-    processor.calculate_position()
+    
     
     # Store quaternions
     processor.right_sensor.set_qtype(args.filter_type)
-    processor.right_sensor.set_qtype(args.filter_type)
+    processor.left_sensor.set_qtype(args.filter_type)
+    
+
     right_quaternions = processor.right_sensor.quat
     left_quaternions = processor.left_sensor.quat
     quaternions = {'right': right_quaternions, 'left': left_quaternions}
+    
+    processor.calculate_position()
+    
     
     # Save quaternions using DataSaver
     input_path = Path(args.file_path)  # Updated from args.path and args.filename
@@ -201,18 +210,40 @@ def main():
     
     
     # Print sensor data
-    #processor.print_sensor_data()
+    processor.print_sensor_data()
     
     # Plot 3D and 2D trajectories
     processor.plot_trajectory_3d()
     processor.plot_trajectory_2d()
 
+    with pd.ExcelWriter('acceleration_data_cleaned.xlsx') as writer:
+        # Convert data to pandas DataFrame for the right sensor
+        df_right = pd.DataFrame(raw_data['right'], columns=['Ax','Ay', 'Az', 'Gx', 'Gy', 'Gz', 'Mx', 'My', 'Mz', '_time'])
+        # Convert the _time column to string to preserve the full datetime with timezones
+        df_right['_time'] = df_right['_time'].astype(str)
+        df_right.to_excel(writer, sheet_name='Right', index=False)
+        
+        # Convert data to pandas DataFrame for the left sensor
+        df_left = pd.DataFrame(raw_data['left'], columns=['Ax','Ay', 'Az', 'Gx', 'Gy', 'Gz', 'Mx', 'My', 'Mz', '_time'])
+        # Convert the _time column to string to preserve the full datetime with timezones
+        df_left['_time'] = df_left['_time'].astype(str)
+        df_left.to_excel(writer, sheet_name='Left', index=False)
+        
+        # Convert data to pandas DataFrame for the coordinates
+        df_coordinates = pd.DataFrame(raw_data['left'], columns=['lat', 'lng', '_time'])
+        # Convert the _time column to string to preserve the full datetime with timezones
+        df_coordinates['_time'] = df_coordinates['_time'].astype(str)
+        df_coordinates.to_excel(writer, sheet_name='coordinates', index=False)
 
+
+        
 
     
    
-    return interpolated_data, quaternions
+    return raw_data
 
 if __name__ == "__main__":
     
-    interpolated_data, quaternons = main()
+    raw_data = main()
+
+
