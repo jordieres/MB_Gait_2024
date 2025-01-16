@@ -102,13 +102,7 @@ class IMUDataProcessor:
         This method processes the raw IMU data into the required format and creates MyIMUSensor instances
         for both feet using the extracted data.
         """
-        R_init_right = np.array([[1.0, 0.0, 0.0],
-                         [0.0, 1.0, 0.0],
-                         [0.0, 0.0, 1.0]])  # z-axis points along the x-axis
-        
-        R_init_left = np.array([[1.0, 0.0, 0.0],
-                         [0.0, 1.0, 0.0],
-                         [0.0, 0.0, 1.0]])
+
         #np.array([[1.0, 0.0, 0.0],
         #                 [0.0, 1.0, 0.0],
         #                 [0.0, 0.0, 1.0]])
@@ -129,20 +123,27 @@ class IMUDataProcessor:
                             [0.0, 0.0, 1.0],  # y-axis points along the z-axis
                             [1.0, 0.0, 0.0]])  # z-axis points along the x-axis
         
+        R_init_right = np.array([[1.0, 0.0, 0.0],
+                         [0.0, 1.0, 0.0],
+                         [0.0, 0.0, 1.0]])  # z-axis points along the x-axis
+        
+        R_init_left = np.array([[1.0, 0.0, 0.0],
+                         [0.0, 1.0, 0.0],
+                         [0.0, 0.0, 1.0]])
         
         if self.verbosity > 0:
-            print("Extracting data for right foot sensor...")
+            print("Extracting data for right foot sensor and converting acceleration from g to m/s**2 and angles from dps to rds...")
         
         right_data = {
             'acc': np.column_stack((
-                np.array(self.interpolated_data['right']['Ax']),
-                np.array(self.interpolated_data['right']['Ay']),
-                np.array(self.interpolated_data['right']['Az'])
+                np.array(self.interpolated_data['right']['Ax']* 9.80665),
+                np.array(self.interpolated_data['right']['Ay']* 9.80665)-9.80665,
+                np.array(self.interpolated_data['right']['Az']* 9.80665)
             )),
             'omega': np.column_stack((
-                np.array(self.interpolated_data['right']['Gx']),
-                np.array(self.interpolated_data['right']['Gy']),
-                np.array(self.interpolated_data['right']['Gz'])
+                np.array(self.interpolated_data['right']['Gx']* (np.pi / 180)),
+                np.array(self.interpolated_data['right']['Gy']* (np.pi / 180)),
+                np.array(self.interpolated_data['right']['Gz']* (np.pi / 180))
             )),
             'mag': np.column_stack((
                 np.array(self.interpolated_data['right']['Mx']),
@@ -151,9 +152,7 @@ class IMUDataProcessor:
             ))
         }
         
-        #right_data['acc'] = self.apply_low_pass_filter(data=right_data['acc'], cutoff=5, fs=50, order=4)
-        #right_data['omega'] = self.apply_low_pass_filter(data=right_data['omega'], cutoff=5, fs=50, order=4)
-        #right_data['mag'] = self.apply_low_pass_filter(data=right_data['mag'], cutoff=5, fs=50, order=4)
+
 
         self.right_sensor = MyIMUSensor(in_data=right_data)
         self.right_sensor.get_data(R_init=R_init_right, rate=50, in_data=right_data)
@@ -168,25 +167,23 @@ class IMUDataProcessor:
         
         left_data = {
             'acc': np.column_stack((
-                np.array(self.interpolated_data['left']['Ax']),
-                np.array(self.interpolated_data['left']['Ay']),
-                np.array(self.interpolated_data['left']['Az'])
+                np.array(self.interpolated_data['left']['Ax']* 9.80665),
+                np.array(self.interpolated_data['left']['Ay']* 9.80665)-9.80665,
+                np.array(self.interpolated_data['left']['Az']* 9.80665)*(-1)
             )),
             'omega': np.column_stack((
-                np.array(self.interpolated_data['left']['Gx']),
-                np.array(self.interpolated_data['left']['Gy']),
-                np.array(self.interpolated_data['left']['Gz'])
+                np.array(self.interpolated_data['left']['Gx']* (np.pi / 180)),
+                np.array(self.interpolated_data['left']['Gy']* (np.pi / 180)),
+                np.array(self.interpolated_data['left']['Gz']* (np.pi / 180))
             )),
             'mag': np.column_stack((
-                np.array(self.interpolated_data['left']['Mx']*(-1)),
+                np.array(self.interpolated_data['left']['Mx']),
                 np.array(self.interpolated_data['left']['My']),
                 np.array(self.interpolated_data['left']['Mz']*(-1))
             ))
         }
         
-        #left_data['acc'] = self.apply_low_pass_filter(data=left_data['acc'], cutoff=5, fs=50, order=4)
-        #left_data['omega'] = self.apply_low_pass_filter(data=left_data['omega'], cutoff=5, fs=50, order=4)
-        #left_data['mag'] = self.apply_low_pass_filter(data=left_data['mag'], cutoff=5, fs=50, order=4)
+
         
         self.left_sensor = MyIMUSensor(in_data=left_data)
         self.left_sensor.get_data(R_init=R_init_left, rate=50, in_data=left_data)
@@ -283,9 +280,9 @@ class IMUDataProcessor:
         # Add traces for each foot
         for foot, sensor, color in zip(['Right', 'Left'], [self.right_sensor, self.left_sensor], ['blue', 'red']):
             position = sensor.pos
-            x, y = position[:, 0], position[:, 1]
+            x, z = position[:, 0], position[:, 2]
             fig.add_trace(go.Scatter(
-                x=x, y=y,
+                x=x, y=z,
                 mode='lines',
                 name=f"{foot} Foot Position Trajectory",
                 line=dict(color=color)
@@ -295,15 +292,12 @@ class IMUDataProcessor:
         fig.update_layout(
             title="2D Position Trajectory",
             xaxis_title="X (m)",
-            yaxis_title="Y (m)",
+            yaxis_title="Z (m)",
             template="plotly_white",
             legend_title="Foot",
             xaxis=dict(scaleanchor="y"),  # This ensures the x and y axes have the same scale
             yaxis=dict(constrain="range")  # Keeps the y-axis range in check if needed
         )
-    
-        # Show plot
-        fig.show()
     
         # Show plot
         fig.show()
