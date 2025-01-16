@@ -92,7 +92,7 @@ class DataFetcher:
             6. Prints information about the fetched data if verbosity level is set to 1 or higher.
     
         Returns:
-        -------
+        
         pd.DataFrame
             A DataFrame containing the fetched data with columns corresponding to the records 
             retrieved from InfluxDB.
@@ -128,7 +128,7 @@ class DataFetcher:
         Saves the DataFrame to a pickle file.
 
         Parameters:
-        ----------
+        
         df : pd.DataFrame
             The DataFrame to save.
         output_dir : str
