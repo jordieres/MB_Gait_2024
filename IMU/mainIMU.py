@@ -12,7 +12,8 @@ import os
 from DataPickle import DataPickle
 import plotly.io as pio
 import pandas as pd
-
+from ahrsimu import AHRSIMU
+from TrajectoryAnalyzerAHRS import TrajectoryAnalyzerAHRS
 
 class VAction(argparse.Action):
     """
@@ -79,20 +80,37 @@ class VAction(argparse.Action):
 
 def main():
     """
-    Main function to handle the overall workflow of loading data, performing gait analysis, 
-    interpolating data, computing trajectories, and analyzing orientation.
+    Main function to manage the workflow of loading data, performing gait analysis, 
+    processing IMU data, computing trajectories, and saving results.
 
-    The function parses command-line arguments, loads data from a pickle file, performs preprocessing, 
-    interpolates the data to balance groups, computes trajectories, and analyzes the orientation using 
-    magnetometer data.
+    This function performs the following steps:
+    1. Parses command-line arguments for input file path, verbosity level, and filter type.
+    2. Loads data from a pickle file using the `DataPickle` class.
+    3. Performs gait analysis and processes IMU data based on the selected filter type.
+    4. Computes and visualizes IMU and GPS trajectories.
+    5. Saves processed data and results to pickle and Excel files.
+
+    Command-Line Arguments:
+    -----------------------
+    -fp, --file_path : str
+        The full path to the pickle file containing raw data.
+    -v, --verbosity : int
+        Verbosity level for output (0 = no output, 1 = minimal output, 2 = detailed output). Default is 0.
+    -flt, --filter_type : str
+        Filter type for IMU orientation calculation. Options:
+        - 'analytical', 'kalman', 'madgwick', 'mahony', 'ahrs', or 'None' (no orientation calculation).
+        Default is 'ahrs'.
 
     Returns:
     -------
-    data_dict : dict
-        Dictionary containing the processed data after gait analysis and interpolation.
-    interpolated_data : dict
-        Dictionary containing the interpolated data after balancing the left and right groups.
+    raw_data : dict
+        Raw data loaded from the pickle file, containing left and right sensor data.
+    gait_evaluation : dict
+        Dictionary containing:
+        - `gait_dict`: Results of the gait analysis.
+        - `IMU_dict`: Results of IMU trajectory analysis.
     """
+    
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Load a DataFrame from a pickle file.")
     parser.add_argument("-fp", "--file_path", type=str, required=True, help="The full path to the pickle file (including the filename).")
@@ -100,10 +118,10 @@ def main():
     parser.add_argument(
     "-flt", "--filter_type",
     type=str,
-    choices=['analytical', 'kalman', 'madgwick', 'mahony', 'None'],
-    default='analytical',
-    help="Determines how the orientation gets calculated: "
-         "'analytical' (default), 'kalman', 'madgwick', 'mahony', or 'None' for no calculation."
+    choices = ['analytical', 'kalman', 'madgwick', 'mahony', 'ahrs','None'],
+    default = 'ahrs',
+    help = "Determines how the orientation gets calculated: "
+         "'analytical' (default), 'kalman', 'madgwick', 'mahony', 'ahrs', or 'None' for no calculation."
 )
     # Parse arguments
     args = parser.parse_args()
@@ -123,10 +141,12 @@ def main():
 
     # Load DataFrame from pickle
     raw_data = data_handler.load_from_pickle(filename=filename)
-    print(len(raw_data['left']['_time']))
-    print(len(raw_data['right']['_time']))
-    print(raw_data['right']['lat'].unique())
-    print(raw_data['right']['lng'].unique())
+    
+    
+
+    
+    
+    
     if args.verbosity > 0:
         print("DataFrame successfully loaded from pickle.")
         
@@ -146,76 +166,79 @@ def main():
 
     
     pio.renderers.default = 'browser'
-    #gait_analysis.plot_data(raw_data)
-    # Initialize Interpolator with data_dict and verbosity
-    #interpolator = Interpolator(data_dict, verbosity=args.verbosity)
-    
-    # Interpolate data to balance the "left" and "right" groups
-    #interpolator.interpolate_data()
-
-    # Get the interpolated data
-    #interpolated_data = interpolator.get_interpolated_data()
-    
-    # Run trajectory analysis
-    #analyzer = TrajectoryAnalyzer(raw_data, dt=0.01, verbosity=args.verbosity)
-    #trajectories = analyzer.compute_trajectories()
-    #analyzer.plot_trajectories(trajectories)
-    
-    # Extract magnetometer data
-    mag_x = raw_data['right']['Mx'].to_numpy()
-    mag_y = raw_data['right']['My'].to_numpy()
-    mag_z = raw_data['right']['Mz'].to_numpy()
-    
-    # Initialize the orientation analyzer with the magnetometer data
-    orientation_analyzer = OrientationAnalyzer(mag_x, mag_y, mag_z, verbosity=args.verbosity)
-    
-    # Smooth the magnetometer data
-    orientation_analyzer.smooth_data(window_size=5)  # You can adjust the window size
-    
-    # Compute heading from the magnetometer data
-    heading = orientation_analyzer.compute_heading()
-    
-    # Detect turns in the heading
-    turn_indices = orientation_analyzer.detect_turns(heading)
-    
-    # Plot heading and detected turns
-    orientation_analyzer.plot_heading(heading, turn_indices)
-    
-    
-    # Create an instance of IMUDataProcessor
-    processor = IMUDataProcessor(raw_data, filter_type=args.filter_type, verbosity=args.verbosity)
-    
-    # Extract and process data
-    processor.extract_data()
-    
-    
-    # Store quaternions
-    processor.right_sensor.set_qtype(args.filter_type)
-    processor.left_sensor.set_qtype(args.filter_type)
+    gait_analysis.plot_data(raw_data)
     
 
-    right_quaternions = processor.right_sensor.quat
-    left_quaternions = processor.left_sensor.quat
-    quaternions = {'right': right_quaternions, 'left': left_quaternions}
     
-    processor.calculate_position()
+    gait_dict=gait_analysis.gait_analysis()
+  
     
     
-    # Save quaternions using DataSaver
-    input_path = Path(args.file_path)  # Updated from args.path and args.filename
-    base_name = input_path.stem  # Filename without the extension
-    directory = input_path.parent  # Parent directory of the file
-    output_filename = f"{base_name}_{args.filter_type}_quaternions.pkl"
-    data_handler.save_to_pickle(data=quaternions, filename=output_filename)
+    if args.filter_type in ['analytical', 'kalman', 'madgwick', 'mahony']:
+        
+        # Create an instance of IMUDataProcessor
+        processor = IMUDataProcessor(raw_data, filter_type=args.filter_type, verbosity=args.verbosity)
+        
+        # Extract and process data
+        processor.extract_data()
+        
+        
+        # Store quaternions
+        processor.right_sensor.set_qtype(args.filter_type)
+        processor.left_sensor.set_qtype(args.filter_type)
+        
     
-    
-    # Print sensor data
-    processor.print_sensor_data()
-    
-    # Plot 3D and 2D trajectories
-    processor.plot_trajectory_3d()
-    processor.plot_trajectory_2d()
+        right_quaternions = processor.right_sensor.quat
+        left_quaternions = processor.left_sensor.quat
+        quaternions = {'right': right_quaternions, 'left': left_quaternions}
+        
+        processor.calculate_position()
+        
+        
+        # Save quaternions using DataSaver
+        input_path = Path(args.file_path)  # Updated from args.path and args.filename
+        base_name = input_path.stem  # Filename without the extension
+        directory = input_path.parent  # Parent directory of the file
+        output_filename = f"{base_name}_{args.filter_type}_quaternions.pkl"
+        data_handler.save_to_pickle(data=quaternions, filename=output_filename)
+        
+        
+        # Print sensor data
+        processor.print_sensor_data()
+        
+        # Plot 3D and 2D trajectories
+        processor.plot_trajectory_3d()
+        processor.plot_trajectory_2d()
 
+    else:
+        
+
+# =============================================================================
+#         analyzer = AHRSIMU(raw_data['right'], 50)
+#         analyzer.ahrs_imu_trajectory()
+#          # Add this method to the AHRSIMU class
+# =============================================================================
+     
+     
+
+        
+        # Assuming `data` is a pandas DataFrame with IMU and GPS columns
+        analyzer = TrajectoryAnalyzerAHRS(raw_data['right'], sample_period=0.02, verbosity=args.verbosity)
+        analyzer.calculate_imu_trajectory()
+        IMU_dict=analyzer.plot_trajectory_with_map(output_html_file="trajectory_map.html")
+        
+        gait_evaluation = {}
+        gait_evaluation['gait_dict']=gait_dict
+        gait_evaluation['IMU_dict']=IMU_dict
+        
+
+
+        # Call the save_to_pickle method
+        data_handler.save_to_pickle(data=gait_evaluation, file_path = 'output_data', filename = 'gait_evaluation.pkl')
+    
+    
+    
+    
     with pd.ExcelWriter('acceleration_data_cleaned.xlsx') as writer:
         # Convert data to pandas DataFrame for the right sensor
         df_right = pd.DataFrame(raw_data['right'], columns=['Ax','Ay', 'Az', 'Gx', 'Gy', 'Gz', 'Mx', 'My', 'Mz', '_time'])
@@ -235,15 +258,14 @@ def main():
         df_coordinates['_time'] = df_coordinates['_time'].astype(str)
         df_coordinates.to_excel(writer, sheet_name='coordinates', index=False)
 
+    
 
         
 
     
    
-    return raw_data
+    return raw_data, gait_evaluation
 
 if __name__ == "__main__":
     
     raw_data = main()
-
-
