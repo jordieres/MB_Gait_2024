@@ -1,18 +1,12 @@
 import argparse
-import numpy as np
+
 from gait_analysis import GaitAnalysis
-from Interpolator import Interpolator
-from TrajectoryAnalyzer import TrajectoryAnalyzer
-from OrientationAnalyzer import OrientationAnalyzer
-import matplotlib.pyplot as plt
-from MyIMUSensor import MyIMUSensor
 from imu_sensor_data_processing import IMUDataProcessor
 from pathlib import Path
-import os
 from DataPickle import DataPickle
 import plotly.io as pio
 import pandas as pd
-from ahrsimu import AHRSIMU
+
 from TrajectoryAnalyzerAHRS import TrajectoryAnalyzerAHRS
 
 class VAction(argparse.Action):
@@ -187,10 +181,10 @@ def main():
         processor.right_sensor.set_qtype(args.filter_type)
         processor.left_sensor.set_qtype(args.filter_type)
         
-    
-        right_quaternions = processor.right_sensor.quat
-        left_quaternions = processor.left_sensor.quat
-        quaternions = {'right': right_quaternions, 'left': left_quaternions}
+        quaternions={}
+        #right_quaternions = processor.right_sensor.quat
+        #left_quaternions = processor.left_sensor.quat
+        #quaternions = {'right': right_quaternions, 'left': left_quaternions}
         
         processor.calculate_position()
         
@@ -213,13 +207,6 @@ def main():
     else:
         
 
-# =============================================================================
-#         analyzer = AHRSIMU(raw_data['right'], 50)
-#         analyzer.ahrs_imu_trajectory()
-#          # Add this method to the AHRSIMU class
-# =============================================================================
-     
-     
 
         
         # Assuming `data` is a pandas DataFrame with IMU and GPS columns
@@ -227,17 +214,7 @@ def main():
         analyzer.calculate_imu_trajectory()
         IMU_dict=analyzer.plot_trajectory_with_map(output_html_file="trajectory_map.html")
         
-        gait_evaluation = {}
-        gait_evaluation['gait_dict']=gait_dict
-        gait_evaluation['IMU_dict']=IMU_dict
-        
-
-
-        # Call the save_to_pickle method
-        data_handler.save_to_pickle(data=gait_evaluation, file_path = 'output_data', filename = 'gait_evaluation.pkl')
-    
-    
-    
+       
     
     with pd.ExcelWriter('acceleration_data_cleaned.xlsx') as writer:
         # Convert data to pandas DataFrame for the right sensor
@@ -258,14 +235,21 @@ def main():
         df_coordinates['_time'] = df_coordinates['_time'].astype(str)
         df_coordinates.to_excel(writer, sheet_name='coordinates', index=False)
 
-    
-
+    gait_evaluation = {}
+    gait_evaluation['gait_dict']=gait_dict
+    if args.filter_type in ['ahrs']:
+        gait_evaluation['IMU_dict']=IMU_dict
+        
+    # Call the save_to_pickle method
+    data_handler.save_to_pickle(data=gait_evaluation, file_path = 'output_data', filename = 'gait_evaluation.pkl')
         
 
     
    
-    return raw_data, gait_evaluation
+    return gait_evaluation
 
 if __name__ == "__main__":
     
-    raw_data = main()
+    gait_evaluation = main()
+    print(gait_evaluation['gait_dict'].keys())
+    print(gait_evaluation['IMU_dict'].keys())
